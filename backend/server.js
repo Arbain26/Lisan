@@ -27,6 +27,7 @@ const heroRoutes = require('./src/routes/heroRoutes');
 const departemenRoutes = require('./src/routes/departemenRoutes');
 const pengurusRoutes = require('./src/routes/pengurusRoutes');
 const settingsRoutes = require('./src/routes/settingsRoutes');
+const messageRoutes = require('./src/routes/messageRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/news', newsRoutes);
@@ -39,6 +40,7 @@ app.use('/api/hero', heroRoutes);
 app.use('/api/departemen', departemenRoutes);
 app.use('/api/pengurus', pengurusRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/pesan', messageRoutes);
 
 // Basic route
 app.get('/', (req, res) => {

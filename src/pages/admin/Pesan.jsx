@@ -5,14 +5,8 @@ import ConfirmModal from "../../components/ui/ConfirmModal";
 import EmptyState from "../../components/ui/EmptyState";
 import { useToast } from "../../components/ui/ToastProvider";
 
-const initialPesan = [
-  { id: 1, name: "Reza Pahlevi", email: "reza@example.com", subject: "Pertanyaan Pendaftaran Anggota", date: "24 Apr 2026", isRead: false },
-  { id: 2, name: "Dina Mariana", email: "dina@example.com", subject: "Undangan Kolaborasi Event", date: "22 Apr 2026", isRead: true },
-  { id: 3, name: "Universitas Terbuka", email: "info@ut.ac.id", subject: "Permohonan Pemateri Seminar", date: "20 Apr 2026", isRead: true },
-];
-
 const Pesan = () => {
-  const { data, loading, isSubmitting, updateItem, deleteItem } = useCRUD("lisan_pesan_data", initialPesan);
+  const { data, loading, isSubmitting, updateItem, deleteItem } = useCRUD("/pesan");
   const { addToast } = useToast();
 
   const [searchTerm, setSearchTerm] = useState("");

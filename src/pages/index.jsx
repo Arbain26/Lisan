@@ -49,13 +49,13 @@ import NilaiOrganisasiPage from './public/NilaiOrganisasiPage';
 import DepartemenPage from './public/DepartemenPage';
 import KorwilPage from './public/KorwilPage';
 import StructurePage from './public/StructurePage';
+import ContactPage from './public/ContactPage';
 
 export const AboutPage = () => <ComingSoon badge="Profil Organisasi" title="Tentang LISAN" subtitle="Mengenal lebih jauh sejarah, visi, dan misi LISAN" />;
 
 export { 
   GalleryPage, NewsPage, NewsDetailPage, ProgramsPage, DonorPage,
   SejarahPage, VisiMisiPage, NilaiOrganisasiPage, DepartemenPage, KorwilPage,
-  StructurePage
+  StructurePage, ContactPage
 };
-export const ContactPage = () => <ComingSoon badge="Hubungi Kami" title="Kontak" subtitle="Sampaikan pesan atau pertanyaan Anda kepada LISAN" />;
 export const JoinPage = () => <ComingSoon badge="Bergabung" title="Daftar Member" subtitle="Jadilah bagian dari gerakan LISAN" />;
