@@ -130,7 +130,7 @@ const Footer = () => {
                   href={`tel:${getTelLink(settings?.telepon)}`} 
                   className="text-gray-400 hover:text-white text-sm font-inter transition-colors"
                 >
-                  {settings?.telepon || "+62 812-3456-7890"}
+                  {settings?.telepon || "+62 819-3317-2687"}
                 </a>
               </li>
               <li className="flex items-center gap-3">

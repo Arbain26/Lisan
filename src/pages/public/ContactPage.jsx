@@ -125,7 +125,7 @@ const ContactPage = () => {
                       {loadingSettings ? (
                         "Memuat nomor..."
                       ) : (
-                        <a href={`tel:${settings?.telepon?.replace(/[^\d+]/g, "") || "+6281234567890"}`} className="hover:text-primary transition-colors font-medium">
+                        <a href={`tel:${settings?.telepon?.replace(/[^\d+]/g, "") || "+6281933172687"}`} className="hover:text-primary transition-colors font-medium">
                           {settings?.telepon || "+62 819-3317-2687"}
                         </a>
                       )}

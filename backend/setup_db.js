@@ -253,7 +253,7 @@ async function run() {
     console.log('Inserting default website settings...');
     await connection.query(`
       INSERT INTO pengaturan (id, nama_organisasi, email, telepon, alamat, instagram, facebook, youtube) VALUES 
-      (1, 'Lingkar Mahasiswa Islam untuk Perubahan (LISAN)', 'info@lisan.id', '+62 812-3456-7890', 'Jl. Jenderal Sudirman No. 123, Kabupaten Sidenreng Rappang, Sulawesi Selatan', 'https://instagram.com/lisan.id', 'https://facebook.com/lisan.id', 'https://youtube.com/@lisan.id')
+      (1, 'Lingkar Mahasiswa Islam untuk Perubahan (LISAN)', 'info@lisan.id', '+62 819-3317-2687', 'Jl. Jenderal Sudirman No. 123, Kabupaten Sidenreng Rappang, Sulawesi Selatan', 'https://instagram.com/lisan.id', 'https://facebook.com/lisan.id', 'https://youtube.com/@lisan.id')
     `);
   }
 
