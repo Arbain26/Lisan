@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
-import { Search, MailOpen, Mail, Trash2, Loader2 } from "lucide-react";
+import { Search, MailOpen, Mail, Trash2, Loader2, Eye } from "lucide-react";
 import useCRUD from "../../hooks/useCRUD";
+import Modal from "../../components/ui/Modal";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 import EmptyState from "../../components/ui/EmptyState";
 import { useToast } from "../../components/ui/ToastProvider";
@@ -11,6 +12,7 @@ const Pesan = () => {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
   const filteredData = useMemo(() => {
@@ -25,6 +27,15 @@ const Pesan = () => {
     addToast(`Pesan ditandai sebagai ${!item.isRead ? 'sudah dibaca' : 'belum dibaca'}`, 'success');
   };
 
+  const handleOpenDetail = async (item) => {
+    setSelectedItem(item);
+    setIsDetailModalOpen(true);
+    // If the message is unread, automatically mark it as read
+    if (!item.isRead) {
+      await updateItem(item.id, { isRead: true });
+    }
+  };
+
   const handleOpenDelete = (item) => {
     setSelectedItem(item);
     setIsDeleteModalOpen(true);
@@ -34,6 +45,7 @@ const Pesan = () => {
     if (selectedItem) {
       await deleteItem(selectedItem.id);
       setIsDeleteModalOpen(false);
+      setIsDetailModalOpen(false);
     }
   };
 
@@ -41,8 +53,8 @@ const Pesan = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-poppins font-bold text-gray-900">Pesan Kontak</h1>
-          <p className="text-sm font-inter text-gray-500 mt-1">Kotak masuk pesan dari pengunjung website</p>
+          <h1 className="text-2xl font-poppins font-bold text-gray-900">Pesan & Permohonan Darah</h1>
+          <p className="text-sm font-inter text-gray-500 mt-1">Kotak masuk pesan dan permohonan bantuan donor darah</p>
         </div>
       </div>
 
@@ -87,6 +99,9 @@ const Pesan = () => {
                       <td className="px-6 py-4 text-sm font-inter text-gray-600">{item.date}</td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button onClick={() => handleOpenDetail(item)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-200" title="Lihat Detail Pesan">
+                            <Eye size={16} />
+                          </button>
                           <button onClick={() => handleToggleRead(item)} className="p-2 text-gray-400 hover:text-secondary hover:bg-amber-50 rounded-lg transition-colors border border-transparent hover:border-amber-200" title={item.isRead ? "Tandai Belum Dibaca" : "Tandai Sudah Dibaca"}>
                             {item.isRead ? <Mail size={16} /> : <MailOpen size={16} />}
                           </button>
@@ -107,6 +122,62 @@ const Pesan = () => {
         )}
       </div>
 
+      {/* Detail Modal */}
+      <Modal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)} title="Detail Pesan & Permohonan">
+        {selectedItem && (
+          <div className="space-y-5 font-inter text-sm text-gray-700">
+            {/* Status & Action */}
+            <div className="flex justify-between items-start gap-4">
+              <div>
+                <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Pengirim / Kontak</span>
+                <h4 className="font-poppins font-semibold text-gray-900 text-base mt-0.5">{selectedItem.name}</h4>
+                <p className="text-xs text-gray-500">{selectedItem.email}</p>
+              </div>
+              <span className={`px-2.5 py-1 rounded-full text-xs font-semibold shrink-0 ${selectedItem.isRead ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-amber-50 text-amber-600 border border-amber-100'}`}>
+                {selectedItem.isRead ? 'Sudah Dibaca' : 'Belum Dibaca'}
+              </span>
+            </div>
+
+            {/* Date */}
+            <div className="border-t border-gray-100 pt-3">
+              <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Tanggal Diterima</span>
+              <p className="mt-0.5 text-gray-900 font-medium">{selectedItem.date}</p>
+            </div>
+
+            {/* Subject */}
+            <div className="border-t border-gray-100 pt-3">
+              <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Subjek</span>
+              <p className="mt-0.5 text-gray-900 font-semibold">{selectedItem.subject}</p>
+            </div>
+
+            {/* Message Body */}
+            <div className="border-t border-gray-100 pt-3">
+              <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-2 block">Rincian / Isi Pesan</span>
+              <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 whitespace-pre-wrap leading-relaxed text-gray-800 font-mono text-xs select-all">
+                {selectedItem.message}
+              </div>
+            </div>
+
+            {/* Footer Buttons */}
+            <div className="flex gap-3 pt-4 border-t border-gray-100">
+              <button
+                onClick={() => handleOpenDelete(selectedItem)}
+                className="flex-1 py-2.5 bg-red-50 hover:bg-red-100 border border-red-200 text-primary font-inter font-medium rounded-xl transition-colors text-sm flex items-center justify-center gap-1.5"
+              >
+                <Trash2 size={16} /> Hapus Pesan
+              </button>
+              <button
+                onClick={() => setIsDetailModalOpen(false)}
+                className="flex-1 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 font-inter font-medium rounded-xl transition-colors text-sm"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Confirm Delete Modal */}
       <ConfirmModal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} onConfirm={handleDeleteConfirm} isDeleting={isSubmitting} title="Hapus Pesan?" message={`Apakah Anda yakin ingin menghapus pesan dari "${selectedItem?.name}"?`} />
     </div>
   );
