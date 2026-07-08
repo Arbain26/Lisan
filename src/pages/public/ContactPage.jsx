@@ -84,7 +84,7 @@ const ContactPage = () => {
 
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
-          
+
           {/* Left Side: Contact Information Cards */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
@@ -126,7 +126,7 @@ const ContactPage = () => {
                         "Memuat nomor..."
                       ) : (
                         <a href={`tel:${settings?.telepon?.replace(/[^\d+]/g, "") || "+6281234567890"}`} className="hover:text-primary transition-colors font-medium">
-                          {settings?.telepon || "+62 812-3456-7890"}
+                          {settings?.telepon || "+62 819-3317-2687"}
                         </a>
                       )}
                     </p>
