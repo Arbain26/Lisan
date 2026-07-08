@@ -159,6 +159,22 @@ async function run() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
 
+  console.log('Creating pengaturan table...');
+  await connection.query(`
+    CREATE TABLE IF NOT EXISTS \`pengaturan\` (
+      \`id\` int(11) NOT NULL AUTO_INCREMENT,
+      \`nama_organisasi\` varchar(255) NOT NULL,
+      \`email\` varchar(150) NOT NULL,
+      \`telepon\` varchar(50) NOT NULL,
+      \`alamat\` text NOT NULL,
+      \`instagram\` varchar(255) DEFAULT NULL,
+      \`facebook\` varchar(255) DEFAULT NULL,
+      \`youtube\` varchar(255) DEFAULT NULL,
+      \`created_at\` timestamp DEFAULT current_timestamp(),
+      PRIMARY KEY (\`id\`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
   // Insert default admin
   const [users] = await connection.query('SELECT COUNT(*) as count FROM users WHERE email = ? OR email = ?', ['admin@lisan.id', 'admin@lisan']);
   if (users[0].count === 0) {
@@ -229,6 +245,16 @@ async function run() {
         dept
       );
     }
+  }
+
+  // Insert default website settings
+  const [settings] = await connection.query('SELECT COUNT(*) as count FROM pengaturan');
+  if (settings[0].count === 0) {
+    console.log('Inserting default website settings...');
+    await connection.query(`
+      INSERT INTO pengaturan (id, nama_organisasi, email, telepon, alamat, instagram, facebook, youtube) VALUES 
+      (1, 'Lingkar Mahasiswa Islam untuk Perubahan (LISAN)', 'info@lisan.id', '+62 812-3456-7890', 'Jl. Jenderal Sudirman No. 123, Kabupaten Sidenreng Rappang, Sulawesi Selatan', 'https://instagram.com/lisan.id', 'https://facebook.com/lisan.id', 'https://youtube.com/@lisan.id')
+    `);
   }
 
   console.log('Database and all tables setup completed successfully!');

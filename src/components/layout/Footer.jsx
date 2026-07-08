@@ -1,7 +1,23 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Share2, Globe, Send, Link as LinkIcon, MapPin, Phone, Mail, Heart } from "lucide-react";
+import api from "../../services/api";
 
 const Footer = () => {
+  const [settings, setSettings] = useState(null);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await api.get("/settings");
+        setSettings(response.data);
+      } catch (err) {
+        console.error("Gagal memuat pengaturan di footer:", err);
+      }
+    };
+    fetchSettings();
+  }, []);
+
   const quickLinks = [
     { label: "About LISAN", path: "/about" },
     { label: "Organization Structure", path: "/structure" },
@@ -14,11 +30,17 @@ const Footer = () => {
   ];
 
   const socials = [
-    { icon: <Share2 size={18} />, href: "#", label: "Facebook" },
-    { icon: <Globe size={18} />, href: "#", label: "Instagram" },
+    { icon: <Share2 size={18} />, href: settings?.facebook || "#", label: "Facebook" },
+    { icon: <Globe size={18} />, href: settings?.instagram || "#", label: "Instagram" },
     { icon: <Send size={18} />, href: "#", label: "Twitter" },
-    { icon: <LinkIcon size={18} />, href: "#", label: "YouTube" },
+    { icon: <LinkIcon size={18} />, href: settings?.youtube || "#", label: "YouTube" },
   ];
+
+  // Helper to strip non-digit characters (except +) for tel link
+  const getTelLink = (phoneStr) => {
+    if (!phoneStr) return "+6281234567890";
+    return phoneStr.replace(/[^\d+]/g, "");
+  };
 
   return (
     <footer className="bg-dark text-white">
@@ -36,17 +58,19 @@ const Footer = () => {
               </div>
               <div>
                 <div className="text-white font-poppins font-bold text-xl leading-none">LISAN</div>
-                <div className="text-secondary text-xs font-inter leading-none mt-1">Lingkar Mahasiswa Islam untuk Perubahan</div>
+                <div className="text-secondary text-xs font-inter leading-none mt-1">Lingkar Mahasiswa Islam</div>
               </div>
             </Link>
             <p className="text-gray-400 text-sm font-inter leading-relaxed mb-6">
-              Building intellectual, progressive, and Islamic generations for a better and more just future Indonesia.
+              Membangun generasi intelektual, progresif, dan Islami untuk masa depan Indonesia yang lebih baik dan berkeadilan.
             </p>
             <div className="flex gap-3">
               {socials.map((s) => (
                 <a
                   key={s.label}
                   href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   aria-label={s.label}
                   className="w-9 h-9 rounded-lg bg-white/10 hover:bg-secondary hover:text-dark flex items-center justify-center text-gray-400 hover:text-dark transition-all duration-300"
                 >
@@ -97,19 +121,25 @@ const Footer = () => {
               <li className="flex items-start gap-3">
                 <MapPin size={16} className="text-secondary mt-0.5 flex-shrink-0" />
                 <span className="text-gray-400 text-sm font-inter leading-relaxed">
-                  Jl. Mahasiswa No. 1, Sidenreng Rappang, Sulawesi Selatan, Indonesia
+                  {settings?.alamat || "Jl. Jenderal Sudirman No. 123, Kabupaten Sidenreng Rappang, Sulawesi Selatan"}
                 </span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone size={16} className="text-secondary flex-shrink-0" />
-                <a href="tel:+6281234567890" className="text-gray-400 hover:text-white text-sm font-inter transition-colors">
-                  +62 812-3456-7890
+                <a 
+                  href={`tel:${getTelLink(settings?.telepon)}`} 
+                  className="text-gray-400 hover:text-white text-sm font-inter transition-colors"
+                >
+                  {settings?.telepon || "+62 812-3456-7890"}
                 </a>
               </li>
               <li className="flex items-center gap-3">
                 <Mail size={16} className="text-secondary flex-shrink-0" />
-                <a href="mailto:lisan@email.com" className="text-gray-400 hover:text-white text-sm font-inter transition-colors">
-                  lisan@email.com
+                <a 
+                  href={`mailto:${settings?.email || 'info@lisan.id'}`} 
+                  className="text-gray-400 hover:text-white text-sm font-inter transition-colors"
+                >
+                  {settings?.email || "info@lisan.id"}
                 </a>
               </li>
             </ul>
