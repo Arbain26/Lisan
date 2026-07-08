@@ -17,7 +17,7 @@ exports.createHero = async (req, res) => {
     let image_url = '';
     
     if (req.file) {
-      image_url = `/uploads/${req.file.filename}`;
+      image_url = `/uploads/hero/${req.file.filename}`;
     }
 
     const [result] = await pool.query(
@@ -40,7 +40,7 @@ exports.updateHero = async (req, res) => {
     const params = [title, highlight, sub];
 
     if (req.file) {
-      const image_url = `/uploads/${req.file.filename}`;
+      const image_url = `/uploads/hero/${req.file.filename}`;
       query += ', image_url = ?';
       params.push(image_url);
 

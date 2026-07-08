@@ -15,6 +15,8 @@ const storage = multer.diskStorage({
       folder += 'programs/';
     } else if (req.baseUrl.includes('pengurus')) {
       folder += 'pengurus/';
+    } else if (req.baseUrl.includes('hero')) {
+      folder += 'hero/';
     } else {
       folder += 'misc/';
     }
