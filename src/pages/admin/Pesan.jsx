@@ -1,10 +1,41 @@
 import { useState, useMemo } from "react";
-import { Search, MailOpen, Mail, Trash2, Loader2, Eye } from "lucide-react";
+import { Search, MailOpen, Mail, Trash2, Loader2, Eye, Phone, MapPin, Heart, Hospital, MessageSquare } from "lucide-react";
 import useCRUD from "../../hooks/useCRUD";
 import Modal from "../../components/ui/Modal";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 import EmptyState from "../../components/ui/EmptyState";
 import { useToast } from "../../components/ui/ToastProvider";
+
+// Helper to parse blood request details from structured message text
+const parseBloodRequest = (messageText) => {
+  const lines = messageText.split('\n');
+  const details = {
+    bloodType: "O",
+    patientName: "-",
+    quantity: "-",
+    hospital: "-",
+    patientAddress: "-",
+    reason: "-",
+    phone: ""
+  };
+  
+  lines.forEach(line => {
+    const parts = line.split(':');
+    if (parts.length >= 2) {
+      const key = parts[0].trim();
+      const value = parts.slice(1).join(':').trim();
+      
+      if (key === 'Golongan Darah') details.bloodType = value;
+      else if (key === 'Nama Pasien') details.patientName = value;
+      else if (key === 'Jumlah yang Dibutuhkan') details.quantity = value;
+      else if (key === 'Tempat Perawatan') details.hospital = value;
+      else if (key === 'Alamat Pasien') details.patientAddress = value;
+      else if (key === 'Keperluan') details.reason = value;
+      else if (key === 'Kontak Pemohon') details.phone = value;
+    }
+  });
+  return details;
+};
 
 const Pesan = () => {
   const { data, loading, isSubmitting, updateItem, deleteItem } = useCRUD("/pesan");
@@ -47,6 +78,11 @@ const Pesan = () => {
       setIsDeleteModalOpen(false);
       setIsDetailModalOpen(false);
     }
+  };
+
+  // Check if message is a blood request
+  const isBloodRequest = (message) => {
+    return message && message.startsWith("--- PERMOHONAN BUTUH DARAH ---");
   };
 
   return (
@@ -92,8 +128,13 @@ const Pesan = () => {
                         <div className="text-xs font-inter text-gray-500 mt-0.5">{item.email}</div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className={`text-sm font-inter text-gray-700 line-clamp-1 ${!item.isRead ? 'font-semibold' : ''}`}>
-                          {item.subject}
+                        <div className="flex items-center gap-2">
+                          {isBloodRequest(item.message) && (
+                            <span className="shrink-0 bg-red-100 text-red-700 text-[10px] font-semibold font-inter px-2 py-0.5 rounded-full border border-red-200">BUTUH DARAH</span>
+                          )}
+                          <div className={`text-sm font-inter text-gray-700 line-clamp-1 ${!item.isRead ? 'font-semibold' : ''}`}>
+                            {item.subject}
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm font-inter text-gray-600">{item.date}</td>
@@ -124,57 +165,120 @@ const Pesan = () => {
 
       {/* Detail Modal */}
       <Modal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)} title="Detail Pesan & Permohonan">
-        {selectedItem && (
-          <div className="space-y-5 font-inter text-sm text-gray-700">
-            {/* Status & Action */}
-            <div className="flex justify-between items-start gap-4">
-              <div>
-                <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Pengirim / Kontak</span>
-                <h4 className="font-poppins font-semibold text-gray-900 text-base mt-0.5">{selectedItem.name}</h4>
-                <p className="text-xs text-gray-500">{selectedItem.email}</p>
+        {selectedItem && (() => {
+          const isBlood = isBloodRequest(selectedItem.message);
+          const bloodDetails = isBlood ? parseBloodRequest(selectedItem.message) : null;
+
+          return (
+            <div className="space-y-5 font-inter text-sm text-gray-700">
+              {/* Status & Action */}
+              <div className="flex justify-between items-start gap-4">
+                <div>
+                  <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Pengirim / Kontak</span>
+                  <h4 className="font-poppins font-semibold text-gray-900 text-base mt-0.5">{selectedItem.name}</h4>
+                  <p className="text-xs text-gray-500">{selectedItem.email}</p>
+                </div>
+                <span className={`px-2.5 py-1 rounded-full text-xs font-semibold shrink-0 ${selectedItem.isRead ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-amber-50 text-amber-600 border border-amber-100'}`}>
+                  {selectedItem.isRead ? 'Sudah Dibaca' : 'Belum Dibaca'}
+                </span>
               </div>
-              <span className={`px-2.5 py-1 rounded-full text-xs font-semibold shrink-0 ${selectedItem.isRead ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-amber-50 text-amber-600 border border-amber-100'}`}>
-                {selectedItem.isRead ? 'Sudah Dibaca' : 'Belum Dibaca'}
-              </span>
-            </div>
 
-            {/* Date */}
-            <div className="border-t border-gray-100 pt-3">
-              <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Tanggal Diterima</span>
-              <p className="mt-0.5 text-gray-900 font-medium">{selectedItem.date}</p>
-            </div>
+              {/* Date */}
+              <div className="border-t border-gray-100 pt-3">
+                <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Tanggal Diterima</span>
+                <p className="mt-0.5 text-gray-900 font-medium">{selectedItem.date}</p>
+              </div>
 
-            {/* Subject */}
-            <div className="border-t border-gray-100 pt-3">
-              <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Subjek</span>
-              <p className="mt-0.5 text-gray-900 font-semibold">{selectedItem.subject}</p>
-            </div>
+              {/* Subject */}
+              <div className="border-t border-gray-100 pt-3">
+                <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Subjek</span>
+                <p className="mt-0.5 text-gray-900 font-semibold">{selectedItem.subject}</p>
+              </div>
 
-            {/* Message Body */}
-            <div className="border-t border-gray-100 pt-3">
-              <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-2 block">Rincian / Isi Pesan</span>
-              <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 whitespace-pre-wrap leading-relaxed text-gray-800 font-mono text-xs select-all">
-                {selectedItem.message}
+              {/* Message Body (Render as beautiful card if it's a blood request) */}
+              <div className="border-t border-gray-100 pt-3">
+                <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-2 block">
+                  {isBlood ? "Kartu Permohonan Darah" : "Isi Pesan"}
+                </span>
+
+                {isBlood ? (
+                  <div className="bg-red-50/50 border border-red-100 rounded-2xl p-5 space-y-4">
+                    {/* Blood Drop & Patient Name */}
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-full bg-red-600 text-white flex items-center justify-center font-poppins font-black text-2xl shadow-md shadow-red-600/25 border-2 border-white select-all">
+                        {bloodDetails.bloodType}
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-red-600 font-semibold uppercase tracking-wider bg-red-100 border border-red-200 px-2.5 py-0.5 rounded-full">BUTUH DARAH</span>
+                        <h4 className="font-poppins font-bold text-gray-900 text-lg mt-1">Pasien: {bloodDetails.patientName}</h4>
+                      </div>
+                    </div>
+
+                    {/* Patient & Request Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 border-t border-red-100/50 pt-4 text-xs leading-relaxed text-gray-700">
+                      <div className="space-y-0.5">
+                        <span className="text-gray-400 font-medium">Jumlah yang Dibutuhkan</span>
+                        <p className="font-bold text-gray-900">{bloodDetails.quantity}</p>
+                      </div>
+                      <div className="space-y-0.5">
+                        <span className="text-gray-400 font-medium flex items-center gap-1"><Hospital size={12} className="text-red-500" /> Tempat Perawatan</span>
+                        <p className="font-semibold text-gray-900">{bloodDetails.hospital}</p>
+                      </div>
+                      <div className="space-y-0.5 sm:col-span-2">
+                        <span className="text-gray-400 font-medium flex items-center gap-1"><MapPin size={12} className="text-red-500" /> Alamat Pasien</span>
+                        <p className="font-medium text-gray-900">{bloodDetails.patientAddress}</p>
+                      </div>
+                      <div className="space-y-0.5 sm:col-span-2">
+                        <span className="text-gray-400 font-medium flex items-center gap-1"><Heart size={12} className="text-red-500" /> Keperluan / Diagnosis</span>
+                        <p className="font-medium text-gray-900">{bloodDetails.reason}</p>
+                      </div>
+                    </div>
+
+                    {/* Contact Action */}
+                    {bloodDetails.phone && (
+                      <div className="flex flex-wrap gap-2 pt-3 border-t border-red-100/50">
+                        <a
+                          href={`tel:${bloodDetails.phone.replace(/[^\d+]/g, "")}`}
+                          className="inline-flex items-center justify-center gap-1.5 text-xs text-white bg-red-600 hover:bg-red-700 px-4 py-2 rounded-xl transition-colors font-medium"
+                        >
+                          <Phone size={13} /> Hubungi Telepon ({bloodDetails.phone})
+                        </a>
+                        <a
+                          href={`https://wa.me/${bloodDetails.phone.replace(/[^\d]/g, "")}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-4 py-2 rounded-xl transition-colors font-medium"
+                        >
+                          <MessageSquare size={13} /> WhatsApp
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 whitespace-pre-wrap leading-relaxed text-gray-800 font-inter">
+                    {selectedItem.message}
+                  </div>
+                )}
+              </div>
+
+              {/* Footer Buttons */}
+              <div className="flex gap-3 pt-4 border-t border-gray-100">
+                <button
+                  onClick={() => handleOpenDelete(selectedItem)}
+                  className="flex-1 py-2.5 bg-red-50 hover:bg-red-100 border border-red-200 text-primary font-inter font-medium rounded-xl transition-colors text-sm flex items-center justify-center gap-1.5"
+                >
+                  <Trash2 size={16} /> Hapus Pesan
+                </button>
+                <button
+                  onClick={() => setIsDetailModalOpen(false)}
+                  className="flex-1 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 font-inter font-medium rounded-xl transition-colors text-sm"
+                >
+                  Tutup
+                </button>
               </div>
             </div>
-
-            {/* Footer Buttons */}
-            <div className="flex gap-3 pt-4 border-t border-gray-100">
-              <button
-                onClick={() => handleOpenDelete(selectedItem)}
-                className="flex-1 py-2.5 bg-red-50 hover:bg-red-100 border border-red-200 text-primary font-inter font-medium rounded-xl transition-colors text-sm flex items-center justify-center gap-1.5"
-              >
-                <Trash2 size={16} /> Hapus Pesan
-              </button>
-              <button
-                onClick={() => setIsDetailModalOpen(false)}
-                className="flex-1 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 font-inter font-medium rounded-xl transition-colors text-sm"
-              >
-                Tutup
-              </button>
-            </div>
-          </div>
-        )}
+          );
+        })()}
       </Modal>
 
       {/* Confirm Delete Modal */}
