@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
+import api from "../../services/api";
 import {
   LayoutDashboard,
   FileText,
@@ -39,6 +40,7 @@ const sidebarGroups = [
     title: "Program & Sosial",
     links: [
       { icon: CalendarDays, label: "Kelola Program", path: "/admin/program" },
+      { icon: CalendarDays, label: "Monitoring Proker", path: "/admin/proker" },
       { icon: HeartHandshake, label: "Lingkar Donor", path: "/admin/donor" },
     ]
   },
@@ -64,6 +66,21 @@ const AdminLayout = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const response = await api.get('/proker/notifications');
+        setUnreadNotifications(response.data.length);
+      } catch (error) {
+        console.error('Failed to fetch notifications', error);
+      }
+    };
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -176,10 +193,14 @@ const AdminLayout = () => {
 
           <div className="flex items-center gap-4">
             {/* Notifications */}
-            <button className="relative p-2 rounded-full text-gray-500 hover:bg-gray-100 transition-colors">
+            <Link to="/admin/proker" className="relative p-2 rounded-full text-gray-500 hover:bg-gray-100 transition-colors block">
               <Bell size={20} />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full border-2 border-white"></span>
-            </button>
+              {unreadNotifications > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 bg-primary text-white text-[9px] font-bold rounded-full border border-white flex items-center justify-center">
+                  {unreadNotifications}
+                </span>
+              )}
+            </Link>
 
             {/* Profile */}
             <div className="flex items-center gap-3 pl-4 border-l border-gray-200">

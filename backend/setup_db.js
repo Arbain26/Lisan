@@ -175,6 +175,69 @@ async function run() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
 
+  console.log('Creating proker table...');
+  await connection.query(`
+    CREATE TABLE IF NOT EXISTS \`proker\` (
+      \`id\` int(11) NOT NULL AUTO_INCREMENT,
+      \`kode\` varchar(50) NOT NULL,
+      \`kegiatan\` varchar(255) NOT NULL,
+      \`penanggung_jawab\` varchar(255) NOT NULL,
+      \`tahun_kepengurusan\` varchar(50) NOT NULL,
+      \`progres\` decimal(5,2) DEFAULT 0.00,
+      \`status\` enum('Belum Mulai','Sedang Berjalan','Selesai','Terlambat') DEFAULT 'Belum Mulai',
+      \`keterangan_terlaksana\` text,
+      \`keterangan_tidak_terlaksana\` text,
+      \`created_at\` timestamp DEFAULT current_timestamp(),
+      \`updated_at\` timestamp DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+      PRIMARY KEY (\`id\`),
+      UNIQUE KEY \`kode_tahun\` (\`kode\`, \`tahun_kepengurusan\`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  console.log('Creating proker_schedule table...');
+  await connection.query(`
+    CREATE TABLE IF NOT EXISTS \`proker_schedule\` (
+      \`id\` int(11) NOT NULL AUTO_INCREMENT,
+      \`proker_id\` int(11) NOT NULL,
+      \`bulan\` varchar(20) NOT NULL,
+      \`tanggal\` varchar(50) NOT NULL,
+      \`status\` enum('Belum Mulai','Terlaksana','Tidak Terlaksana') DEFAULT 'Belum Mulai',
+      \`updated_at\` timestamp DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+      PRIMARY KEY (\`id\`),
+      KEY \`proker_id\` (\`proker_id\`),
+      CONSTRAINT \`fk_setup_schedule_proker\` FOREIGN KEY (\`proker_id\`) REFERENCES \`proker\` (\`id\`) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  console.log('Creating proker_notifications table...');
+  await connection.query(`
+    CREATE TABLE IF NOT EXISTS \`proker_notifications\` (
+      `id` int(11) NOT NULL AUTO_INCREMENT,
+      `proker_id` int(11) NOT NULL,
+      `type` varchar(50) NOT NULL,
+      `message` text NOT NULL,
+      `is_read` tinyint(1) DEFAULT 0,
+      `created_at` timestamp DEFAULT current_timestamp(),
+      PRIMARY KEY (`id`),
+      KEY `proker_id` (`proker_id`),
+      CONSTRAINT `fk_setup_notifications_proker` FOREIGN KEY (`proker_id`) REFERENCES `proker` (`id`) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  console.log('Creating proker_files table...');
+  await connection.query(`
+    CREATE TABLE IF NOT EXISTS \`proker_files\` (
+      \`id\` int(11) NOT NULL AUTO_INCREMENT,
+      \`filename\` varchar(255) NOT NULL,
+      \`original_name\` varchar(255) NOT NULL,
+      \`file_path\` varchar(255) NOT NULL,
+      \`file_size\` int(11) NOT NULL,
+      \`uploaded_at\` timestamp DEFAULT current_timestamp(),
+      PRIMARY KEY (\`id\`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+
   // Insert default admin
   const [users] = await connection.query('SELECT COUNT(*) as count FROM users WHERE email = ? OR email = ?', ['admin@lisan.id', 'admin@lisan']);
   if (users[0].count === 0) {

@@ -7,13 +7,15 @@ exports.getDashboardStats = async (req, res) => {
     const [[{ total_galeri }]] = await pool.query('SELECT COUNT(*) AS total_galeri FROM galeri');
     const [[{ total_relawan }]] = await pool.query('SELECT COUNT(*) AS total_relawan FROM relawan');
     const [[{ total_pesan }]] = await pool.query('SELECT COUNT(*) AS total_pesan FROM pesan');
+    const [[{ total_proker }]] = await pool.query('SELECT COUNT(*) AS total_proker FROM proker');
 
     res.json({
       berita: total_berita,
       program: total_program,
       galeri: total_galeri,
       relawan: total_relawan,
-      pesan: total_pesan
+      pesan: total_pesan,
+      proker: total_proker
     });
   } catch (error) {
     console.error('Error fetching dashboard stats:', error);

@@ -1,6 +1,20 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Newspaper, FileText, CalendarDays, ImageIcon, HeartHandshake, Users, MessageSquare, ArrowUpRight, Plus } from "lucide-react";
+import { 
+  Newspaper, 
+  FileText, 
+  CalendarDays, 
+  ImageIcon, 
+  HeartHandshake, 
+  Users, 
+  MessageSquare, 
+  ArrowUpRight, 
+  Plus, 
+  Loader2, 
+  AlertTriangle, 
+  CheckCircle2, 
+  Bell 
+} from "lucide-react";
 
 import { useState, useEffect } from "react";
 import api from "../../services/api";
@@ -20,8 +34,13 @@ const Dashboard = () => {
     galeri: 0,
     relawan: 0,
     pesan: 0,
+    proker: 0,
   });
   const [loadingStats, setLoadingStats] = useState(true);
+  
+  const [prokerStats, setProkerStats] = useState(null);
+  const [prokerAlerts, setProkerAlerts] = useState([]);
+  const [loadingProker, setLoadingProker] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -34,11 +53,28 @@ const Dashboard = () => {
         setLoadingStats(false);
       }
     };
+
+    const fetchProkerDashboard = async () => {
+      try {
+        const statsRes = await api.get('/proker/dashboard');
+        setProkerStats(statsRes.data.stats);
+        
+        const alertsRes = await api.get('/proker/notifications');
+        setProkerAlerts(alertsRes.data.slice(0, 3)); // show top 3 alerts
+      } catch (error) {
+        console.error("Failed to fetch proker dashboard in main admin dashboard", error);
+      } finally {
+        setLoadingProker(false);
+      }
+    };
+
     fetchStats();
+    fetchProkerDashboard();
   }, []);
 
   const stats = [
     { title: "Total Berita", value: loadingStats ? "..." : dashboardStats.berita, icon: Newspaper, color: "text-blue-500", bg: "bg-blue-500/10", trend: "Live" },
+    { title: "Program Kerja (Proker)", value: loadingStats ? "..." : dashboardStats.proker, icon: CalendarDays, color: "text-rose-500", bg: "bg-rose-500/10", trend: "Live" },
     { title: "Total Program", value: loadingStats ? "..." : dashboardStats.program, icon: CalendarDays, color: "text-emerald-500", bg: "bg-emerald-500/10", trend: "Live" },
     { title: "Foto Galeri", value: loadingStats ? "..." : dashboardStats.galeri, icon: ImageIcon, color: "text-purple-500", bg: "bg-purple-500/10", trend: "Live" },
     { title: "Total Relawan", value: loadingStats ? "..." : dashboardStats.relawan, icon: Users, color: "text-secondary", bg: "bg-secondary/10", trend: "Live" },
@@ -67,7 +103,7 @@ const Dashboard = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 sm:gap-6">
         {stats.map((stat, index) => (
           <motion.div
             key={stat.title}
@@ -85,10 +121,97 @@ const Dashboard = () => {
                 <ArrowUpRight size={12} />
               </span>
             </div>
-            <h3 className="text-gray-500 font-inter text-sm mb-1">{stat.title}</h3>
-            <div className="text-3xl font-poppins font-bold text-gray-900">{stat.value}</div>
+            <h3 className="text-gray-500 font-inter text-xs mb-1">{stat.title}</h3>
+            <div className="text-2xl font-poppins font-bold text-gray-900 mt-auto">{stat.value}</div>
           </motion.div>
         ))}
+      </div>
+
+      {/* Proker Monitoring Summary */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Proker Status Summary */}
+        <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="font-poppins font-bold text-lg text-gray-900">Kesehatan Program Kerja (Proker)</h2>
+              <Link to="/admin/proker" className="text-sm font-inter text-primary hover:text-red-800 font-medium transition-colors">
+                Kelola Matriks Proker &rarr;
+              </Link>
+            </div>
+            {loadingProker ? (
+              <div className="py-10 flex justify-center"><Loader2 className="w-8 h-8 text-primary animate-spin" /></div>
+            ) : prokerStats ? (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 text-center">
+                  <p className="text-xs text-gray-500 font-medium font-inter mb-1">Total Proker</p>
+                  <p className="text-2xl font-bold font-poppins text-gray-800">{prokerStats.total}</p>
+                </div>
+                <div className="p-4 bg-emerald-50 text-center rounded-xl border border-emerald-100/50">
+                  <p className="text-xs text-emerald-600 font-semibold font-inter mb-1">Selesai</p>
+                  <p className="text-2xl font-bold font-poppins text-emerald-700">{prokerStats.completed}</p>
+                </div>
+                <div className="p-4 bg-blue-50 text-center rounded-xl border border-blue-100/50">
+                  <p className="text-xs text-blue-600 font-semibold font-inter mb-1">Berjalan</p>
+                  <p className="text-2xl font-bold font-poppins text-blue-700">{prokerStats.running}</p>
+                </div>
+                <div className="p-4 bg-rose-50 text-center rounded-xl border border-rose-100/50">
+                  <p className="text-xs text-rose-600 font-semibold font-inter mb-1">Terlambat</p>
+                  <p className="text-2xl font-bold font-poppins text-rose-700">{prokerStats.delayed}</p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-400 font-inter italic py-4">Belum ada data Program Kerja. Unggah melalui menu Kelola Matriks Proker.</p>
+            )}
+          </div>
+          {prokerStats && prokerStats.total > 0 && (
+            <div className="mt-6 pt-6 border-t border-gray-100">
+              <div className="flex items-center justify-between text-xs font-semibold text-gray-600 mb-2">
+                <span>Rasio Capaian Target Organisasi</span>
+                <span>{Math.round((prokerStats.completed / prokerStats.total) * 100)}%</span>
+              </div>
+              <div className="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden">
+                <div className="bg-emerald-500 h-full rounded-full transition-all" style={{ width: `${(prokerStats.completed / prokerStats.total) * 100}%` }} />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Proker Critical Alerts */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-poppins font-bold text-lg text-gray-900 flex items-center gap-2">
+                <Bell className="w-5 h-5 text-rose-500" />
+                Peringatan Kendala
+              </h2>
+              {prokerAlerts.length > 0 && (
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+              )}
+            </div>
+            {loadingProker ? (
+              <div className="py-10 flex justify-center"><Loader2 className="w-8 h-8 text-primary animate-spin" /></div>
+            ) : prokerAlerts.length > 0 ? (
+              <div className="space-y-3">
+                {prokerAlerts.map(alert => (
+                  <div key={alert.id} className="p-3 bg-rose-50/30 border border-rose-100 rounded-xl flex gap-2">
+                    <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                    <p className="text-xs text-gray-700 font-medium font-inter line-clamp-2 leading-relaxed" title={alert.message}>
+                      {alert.message}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-8 text-center flex flex-col items-center justify-center gap-2 text-gray-400">
+                <CheckCircle2 className="w-8 h-8 text-emerald-500" />
+                <p className="text-xs font-semibold text-gray-500">Semua target berjalan aman</p>
+              </div>
+            )}
+          </div>
+          <Link to="/admin/proker" className="mt-4 text-xs font-semibold text-center text-primary hover:text-red-800 transition-colors pt-3 border-t border-gray-100 block">
+            Lihat Semua Peringatan &rarr;
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

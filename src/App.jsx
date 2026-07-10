@@ -29,6 +29,7 @@ import Dashboard from "./pages/admin/Dashboard";
 import Berita from "./pages/admin/Berita";
 import Artikel from "./pages/admin/Artikel";
 import Program from "./pages/admin/Program";
+import Proker from "./pages/admin/Proker";
 import Galeri from "./pages/admin/Galeri";
 import Donor from "./pages/admin/Donor";
 import Relawan from "./pages/admin/Relawan";
@@ -92,6 +93,7 @@ function App() {
               <Route path="artikel" element={<PageTransition><Artikel /></PageTransition>} />
               <Route path="hero" element={<PageTransition><HeroSlides /></PageTransition>} />
               <Route path="program" element={<PageTransition><Program /></PageTransition>} />
+              <Route path="proker" element={<PageTransition><Proker /></PageTransition>} />
               <Route path="galeri" element={<PageTransition><Galeri /></PageTransition>} />
               <Route path="donor" element={<PageTransition><Donor /></PageTransition>} />
               <Route path="relawan" element={<PageTransition><Relawan /></PageTransition>} />
