@@ -825,3 +825,138 @@ exports.getUploadedFiles = async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 };
+
+// 9. Add Manual Schedule Date
+exports.addScheduleDate = async (req, res) => {
+  const { id } = req.params;
+  const { bulan, tanggal } = req.body;
+
+  if (!bulan || !tanggal) {
+    return res.status(400).json({ message: 'Bulan dan tanggal wajib diisi' });
+  }
+
+  try {
+    // Check if the proker exists
+    const [[prokerExists]] = await pool.query('SELECT id FROM proker WHERE id = ?', [id]);
+    if (!prokerExists) {
+      return res.status(404).json({ message: 'Program kerja tidak ditemukan' });
+    }
+
+    // Insert schedule
+    const [result] = await pool.query(
+      'INSERT INTO proker_schedule (proker_id, bulan, tanggal, status) VALUES (?, ?, ?, "Belum Mulai")',
+      [id, bulan, tanggal]
+    );
+
+    const newId = result.insertId;
+
+    // Re-evaluate proker stats and notifications
+    await evaluateProker(id);
+
+    // Fetch updated proker and schedule
+    const [[proker]] = await pool.query('SELECT * FROM proker WHERE id = ?', [id]);
+    const [schedules] = await pool.query('SELECT * FROM proker_schedule WHERE proker_id = ?', [id]);
+    const evalResult = await calculateColorAndHealth(proker, schedules);
+    const [[newSched]] = await pool.query('SELECT * FROM proker_schedule WHERE id = ?', [newId]);
+
+    res.json({
+      message: 'Jadwal berhasil ditambahkan',
+      progres: proker.progres,
+      status: proker.status,
+      indicator: evalResult.indicator,
+      schedule: newSched
+    });
+  } catch (error) {
+    logError('addScheduleDate', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+// 10. Edit Manual Schedule Date (Reschedule)
+exports.editScheduleDate = async (req, res) => {
+  const { id, scheduleId } = req.params;
+  const { tanggal } = req.body;
+
+  if (!tanggal) {
+    return res.status(400).json({ message: 'Tanggal wajib diisi' });
+  }
+
+  try {
+    // Update schedule date
+    const [result] = await pool.query(
+      'UPDATE proker_schedule SET tanggal = ? WHERE id = ? AND proker_id = ?',
+      [tanggal, scheduleId, id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Jadwal tidak ditemukan' });
+    }
+
+    // Re-evaluate proker stats
+    await evaluateProker(id);
+
+    // Fetch updated proker and schedule
+    const [[proker]] = await pool.query('SELECT * FROM proker WHERE id = ?', [id]);
+    const [schedules] = await pool.query('SELECT * FROM proker_schedule WHERE proker_id = ?', [id]);
+    const evalResult = await calculateColorAndHealth(proker, schedules);
+    const [[updatedSched]] = await pool.query('SELECT * FROM proker_schedule WHERE id = ?', [scheduleId]);
+
+    res.json({
+      message: 'Jadwal berhasil diubah',
+      progres: proker.progres,
+      status: proker.status,
+      indicator: evalResult.indicator,
+      schedule: updatedSched
+    });
+  } catch (error) {
+    logError('editScheduleDate', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+// 11. Delete Manual Schedule Date
+exports.deleteScheduleDate = async (req, res) => {
+  const { id, scheduleId } = req.params;
+
+  try {
+    // Delete schedule
+    const [result] = await pool.query(
+      'DELETE FROM proker_schedule WHERE id = ? AND proker_id = ?',
+      [scheduleId, id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Jadwal tidak ditemukan' });
+    }
+
+    // Re-evaluate proker stats and notifications
+    await evaluateProker(id);
+
+    // Fetch updated proker and schedules
+    const [[proker]] = await pool.query('SELECT * FROM proker WHERE id = ?', [id]);
+    const [schedules] = await pool.query('SELECT * FROM proker_schedule WHERE proker_id = ?', [id]);
+    
+    // In case no schedules left
+    let indicator = 'green';
+    if (schedules.length > 0) {
+      const evalResult = await calculateColorAndHealth(proker, schedules);
+      indicator = evalResult.indicator;
+    } else {
+      // Set to 0% and Belum Mulai if no schedules
+      await pool.query('UPDATE proker SET progres = 0, status = "Belum Mulai" WHERE id = ?', [id]);
+      proker.progres = 0;
+      proker.status = "Belum Mulai";
+    }
+
+    res.json({
+      message: 'Jadwal berhasil dihapus',
+      progres: proker.progres,
+      status: proker.status,
+      indicator: indicator,
+      deletedScheduleId: parseInt(scheduleId)
+    });
+  } catch (error) {
+    logError('deleteScheduleDate', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};

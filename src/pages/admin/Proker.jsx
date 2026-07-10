@@ -19,7 +19,10 @@ import {
   RefreshCw,
   BellRing,
   Image,
-  Camera
+  Camera,
+  Edit,
+  Trash,
+  Plus
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "../../services/api";
@@ -62,6 +65,14 @@ const Proker = () => {
   const [proofImage, setProofImage] = useState(null);
   const [proofImagePreview, setProofImagePreview] = useState(null);
   const [submittingProof, setSubmittingProof] = useState(false);
+
+  // Manual Schedule action modal states
+  const [isSchedActionModalOpen, setIsSchedActionModalOpen] = useState(false);
+  const [schedActionType, setSchedActionType] = useState(""); // "add" or "edit"
+  const [actionProkerId, setActionProkerId] = useState(null);
+  const [actionScheduleId, setActionScheduleId] = useState(null);
+  const [actionMonth, setActionMonth] = useState("");
+  const [actionDateValue, setActionDateValue] = useState("");
 
   const fetchAllData = async () => {
     setLoading(true);
@@ -272,6 +283,125 @@ const Proker = () => {
       toast.error(error.response?.data?.message || "Gagal mengunggah dokumentasi");
     } finally {
       setSubmittingProof(false);
+    }
+  };
+
+  const handleAddDatePrompt = (prokerId, month) => {
+    setActionProkerId(prokerId);
+    setActionMonth(month);
+    setSchedActionType("add");
+    setActionDateValue("");
+    setIsSchedActionModalOpen(true);
+  };
+
+  const handleEditDatePrompt = (prokerId, scheduleId, currentVal) => {
+    setActionProkerId(prokerId);
+    setActionScheduleId(scheduleId);
+    setSchedActionType("edit");
+    setActionDateValue(currentVal);
+    setIsSchedActionModalOpen(true);
+  };
+
+  const handleDeleteDateConfirm = async (prokerId, scheduleId, dateVal) => {
+    if (!window.confirm(`Apakah Anda yakin ingin menghapus jadwal tanggal "${dateVal}"?`)) {
+      return;
+    }
+
+    try {
+      const response = await api.delete(`/proker/${prokerId}/schedule/${scheduleId}`);
+
+      // Update local state by removing the deleted schedule item
+      setProkers(prev => prev.map(p => {
+        if (p.id === prokerId) {
+          const updatedSchedules = p.schedules.filter(s => s.id !== scheduleId);
+          return {
+            ...p,
+            progres: response.data.progres,
+            status: response.data.status,
+            indicator: response.data.indicator,
+            schedules: updatedSchedules
+          };
+        }
+        return p;
+      }));
+
+      // Refresh dashboard & notifications
+      const dashRes = await api.get("/proker/dashboard", { params: { tahun: selectedYear } });
+      setDashboardData(dashRes.data);
+      const notifRes = await api.get("/proker/notifications");
+      setNotifications(notifRes.data);
+
+      toast.success("Jadwal berhasil dihapus!");
+    } catch (error) {
+      console.error("Error deleting schedule:", error);
+      toast.error("Gagal menghapus jadwal");
+    }
+  };
+
+  const handleSchedActionSubmit = async (e) => {
+    e.preventDefault();
+    if (!actionDateValue.trim()) return;
+
+    try {
+      if (schedActionType === "add") {
+        const response = await api.post(`/proker/${actionProkerId}/schedule`, {
+          bulan: actionMonth,
+          tanggal: actionDateValue
+        });
+
+        // Add to local state
+        setProkers(prev => prev.map(p => {
+          if (p.id === actionProkerId) {
+            return {
+              ...p,
+              progres: response.data.progres,
+              status: response.data.status,
+              indicator: response.data.indicator,
+              schedules: [...p.schedules, response.data.schedule]
+            };
+          }
+          return p;
+        }));
+
+        toast.success("Jadwal berhasil ditambahkan!");
+      } else {
+        const response = await api.put(`/proker/${actionProkerId}/schedule/${actionScheduleId}/reschedule`, {
+          tanggal: actionDateValue
+        });
+
+        // Update local state
+        setProkers(prev => prev.map(p => {
+          if (p.id === actionProkerId) {
+            const updatedSchedules = p.schedules.map(s => {
+              if (s.id === actionScheduleId) {
+                return response.data.schedule;
+              }
+              return s;
+            });
+            return {
+              ...p,
+              progres: response.data.progres,
+              status: response.data.status,
+              indicator: response.data.indicator,
+              schedules: updatedSchedules
+            };
+          }
+          return p;
+        }));
+
+        toast.success("Jadwal berhasil diubah!");
+      }
+
+      // Refresh dashboard & notifications
+      const dashRes = await api.get("/proker/dashboard", { params: { tahun: selectedYear } });
+      setDashboardData(dashRes.data);
+      const notifRes = await api.get("/proker/notifications");
+      setNotifications(notifRes.data);
+
+      setIsSchedActionModalOpen(false);
+    } catch (error) {
+      console.error("Error saving schedule:", error);
+      toast.error(error.response?.data?.message || "Gagal menyimpan jadwal");
     }
   };
 
@@ -706,9 +836,18 @@ const Proker = () => {
                                           const monthSchedules = p.schedules.filter(s => s.bulan.toLowerCase() === month.toLowerCase());
                                           return (
                                             <div key={month} className="bg-white rounded-xl p-4 border border-gray-200/60 flex flex-col min-h-[100px] shadow-sm">
-                                              <span className="font-poppins font-bold text-xs text-gray-800 border-b border-gray-100 pb-2 mb-2 block uppercase tracking-wider">
-                                                {month}
-                                              </span>
+                                              <div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-2">
+                                                <span className="font-poppins font-bold text-xs text-gray-800 uppercase tracking-wider">
+                                                  {month}
+                                                </span>
+                                                <button
+                                                  onClick={() => handleAddDatePrompt(p.id, month)}
+                                                  className="p-1 hover:bg-gray-100 text-primary hover:text-red-700 rounded-md transition-colors"
+                                                  title={`Tambah Jadwal Bulan ${month}`}
+                                                >
+                                                  <Plus size={12} />
+                                                </button>
+                                              </div>
                                               <div className="flex flex-wrap gap-2 flex-1 items-start content-start">
                                                 {monthSchedules.length === 0 ? (
                                                   <span className="text-[10px] text-gray-400 font-medium italic mt-2">Tidak ada jadwal</span>
@@ -739,23 +878,46 @@ const Proker = () => {
                                                         </div>
                                                       </button>
                                                       
-                                                      {sched.status === 'Terlaksana' && (
+                                                      {/* Floating Action Menu for Scheduling & Proof */}
+                                                      <div className="absolute right-8 top-1/2 -translate-y-1/2 items-center gap-1 hidden group-hover/btn:flex transition-all z-10 bg-white border border-gray-150 p-0.5 rounded-md shadow-md">
+                                                        {sched.status === 'Terlaksana' && (
+                                                          <button
+                                                            onClick={(e) => {
+                                                              e.stopPropagation();
+                                                              setProofProkerId(p.id);
+                                                              setProofScheduleId(sched.id);
+                                                              setProofNotes(sched.keterangan || "");
+                                                              setProofImage(null);
+                                                              setProofImagePreview(sched.foto_url ? `http://localhost:5000${sched.foto_url}` : null);
+                                                              setIsProofModalOpen(true);
+                                                            }}
+                                                            className="p-0.5 text-emerald-600 hover:bg-emerald-50 rounded"
+                                                            title="Edit Bukti Pelaksanaan"
+                                                          >
+                                                            <Camera size={11} />
+                                                          </button>
+                                                        )}
                                                         <button
                                                           onClick={(e) => {
                                                             e.stopPropagation();
-                                                            setProofProkerId(p.id);
-                                                            setProofScheduleId(sched.id);
-                                                            setProofNotes(sched.keterangan || "");
-                                                            setProofImage(null);
-                                                            setProofImagePreview(sched.foto_url ? `http://localhost:5000${sched.foto_url}` : null);
-                                                            setIsProofModalOpen(true);
+                                                            handleEditDatePrompt(p.id, sched.id, sched.tanggal);
                                                           }}
-                                                          className="absolute right-8 top-1/2 -translate-y-1/2 p-1 text-emerald-600 hover:text-emerald-800 bg-white hover:bg-white border border-emerald-200 rounded-md hidden group-hover/btn:block transition-all shadow-sm z-10"
-                                                          title="Edit Bukti Pelaksanaan"
+                                                          className="p-0.5 text-blue-600 hover:bg-blue-50 rounded"
+                                                          title="Ubah Tanggal"
                                                         >
-                                                          <Camera size={10} />
+                                                          <Edit size={11} />
                                                         </button>
-                                                      )}
+                                                        <button
+                                                          onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleDeleteDateConfirm(p.id, sched.id, sched.tanggal);
+                                                          }}
+                                                          className="p-0.5 text-rose-600 hover:bg-rose-50 rounded"
+                                                          title="Hapus Jadwal"
+                                                        >
+                                                          <Trash size={11} />
+                                                        </button>
+                                                      </div>
                                                     </div>
                                                   ))
                                                 )}
@@ -1256,6 +1418,83 @@ const Proker = () => {
                           Simpan Bukti
                         </>
                       )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ADD/EDIT MANUAL SCHEDULE DATE MODAL */}
+      <AnimatePresence>
+        {isSchedActionModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsSchedActionModalOpen(false)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            />
+            
+            <motion.div
+              initial={{ scale: 0.95, y: 10, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.95, y: 10, opacity: 0 }}
+              className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-2xl relative z-10 border border-gray-100"
+            >
+              <div className="space-y-6">
+                <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                  <h3 className="font-poppins font-extrabold text-xl text-gray-900 flex items-center gap-2">
+                    <Calendar className="text-primary" size={22} />
+                    {schedActionType === "add" ? "Tambah Jadwal Baru" : "Ubah Tanggal Jadwal"}
+                  </h3>
+                  <button 
+                    onClick={() => setIsSchedActionModalOpen(false)}
+                    className="text-gray-400 hover:text-gray-700 text-sm font-semibold p-1"
+                  >
+                    <XCircle size={20} />
+                  </button>
+                </div>
+
+                <form onSubmit={handleSchedActionSubmit} className="space-y-5">
+                  {schedActionType === "add" && (
+                    <div className="bg-gray-50 border border-gray-150 p-3.5 rounded-2xl text-xs font-semibold text-gray-500 uppercase tracking-wider flex justify-between">
+                      <span>Bulan Sasaran:</span>
+                      <span className="text-primary font-bold">{actionMonth}</span>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-inter font-bold text-gray-700">Tanggal / Agenda Jadwal</label>
+                    <input
+                      type="text"
+                      value={actionDateValue}
+                      onChange={(e) => setActionDateValue(e.target.value)}
+                      placeholder="Masukkan tanggal atau info (misal: 12, 18, atau Akhir Bulan)"
+                      className="w-full bg-gray-50 border border-gray-250 rounded-xl px-4 py-3 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-semibold"
+                      required
+                      autoFocus
+                    />
+                    <p className="text-[10px] text-gray-400 font-medium">Bisa diisi angka tanggal saja (misal: 15) atau teks keterangan (misal: Minggu ke-2).</p>
+                  </div>
+
+                  <div className="flex gap-3 pt-4 border-t border-gray-100">
+                    <button
+                      type="button"
+                      onClick={() => setIsSchedActionModalOpen(false)}
+                      className="flex-1 px-4 py-3 rounded-xl font-inter font-semibold text-gray-700 bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors text-sm"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-1 px-4 py-3 rounded-xl font-inter font-bold text-white bg-primary hover:bg-red-800 transition-colors flex items-center justify-center gap-2 text-sm shadow-lg shadow-primary/20"
+                    >
+                      <Check size={16} />
+                      Simpan Jadwal
                     </button>
                   </div>
                 </form>

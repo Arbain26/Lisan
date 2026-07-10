@@ -13,7 +13,10 @@ const {
   getNotifications,
   readNotification,
   getProkerDashboard,
-  getUploadedFiles
+  getUploadedFiles,
+  addScheduleDate,
+  editScheduleDate,
+  deleteScheduleDate
 } = require('../controllers/prokerController');
 
 // Multer disk storage configuration for Excel files
@@ -67,6 +70,9 @@ router.post('/upload', protect, (req, res, next) => {
   });
 }, uploadProker);
 router.put('/:id/schedule/:scheduleId', protect, imageUpload.single('image'), updateScheduleStatus); // Updated with imageUpload
+router.post('/:id/schedule', protect, addScheduleDate); // Add manual date
+router.put('/:id/schedule/:scheduleId/reschedule', protect, editScheduleDate); // Edit manual date
+router.delete('/:id/schedule/:scheduleId', protect, deleteScheduleDate); // Delete manual date
 router.get('/notifications', protect, getNotifications);
 router.post('/notifications/:id/read', protect, readNotification);
 
