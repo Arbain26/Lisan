@@ -209,6 +209,12 @@ const Proker = () => {
   };
 
   const handleCycleStatus = async (prokerId, scheduleId, currentStatus) => {
+    if (currentStatus === "Terlaksana") {
+      if (!window.confirm("Mengubah status dari 'Terlaksana' akan menghapus laporan catatan dan foto dokumentasi kegiatan ini. Apakah Anda yakin?")) {
+        return;
+      }
+    }
+
     const statuses = ["Belum Mulai", "Terlaksana", "Tidak Terlaksana"];
     const nextIdx = (statuses.indexOf(currentStatus) + 1) % statuses.length;
     const nextStatus = statuses[nextIdx];
@@ -1344,11 +1350,11 @@ const Proker = () => {
                     <label className="text-sm font-inter font-bold text-gray-700">Foto Dokumentasi (Bukti Pelaksanaan)</label>
                     
                     {proofImagePreview ? (
-                      <div className="relative rounded-2xl overflow-hidden border border-gray-200 aspect-video group">
+                      <div className="relative rounded-2xl overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center p-2 group max-h-[350px]">
                         <img 
                           src={proofImagePreview} 
                           alt="Preview Bukti" 
-                          className="w-full h-full object-cover"
+                          className="w-full h-auto max-h-[330px] object-contain rounded-xl"
                         />
                         <button
                           type="button"

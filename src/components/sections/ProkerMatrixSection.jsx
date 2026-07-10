@@ -324,11 +324,11 @@ const ProkerMatrixSection = () => {
               <div className="p-6 space-y-5">
                 {/* Photo */}
                 {selectedSched.foto_url ? (
-                  <div className="rounded-2xl overflow-hidden border border-gray-200 aspect-video shadow-inner bg-gray-50 flex items-center justify-center">
+                  <div className="rounded-2xl overflow-hidden border border-gray-200 shadow-inner bg-gray-50 flex items-center justify-center p-2 max-h-[350px]">
                     <img 
                       src={`http://localhost:5000${selectedSched.foto_url}`} 
                       alt="Dokumentasi Pelaksanaan" 
-                      className="w-full h-full object-cover"
+                      className="w-full h-auto max-h-[330px] object-contain rounded-xl"
                     />
                   </div>
                 ) : (
