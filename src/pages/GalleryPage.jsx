@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { ZoomIn, Calendar } from "lucide-react";
 import useFetch from "../hooks/useFetch";
+import { getMediaUrl } from "../services/mediaUrl";
 
 const PageHeader = ({ title, subtitle, badge }) => (
   <div
@@ -50,7 +51,7 @@ const GalleryPage = () => {
                 className="group relative rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300 aspect-[4/3]"
               >
                 <img
-                  src={`http://localhost:5000${img.image_url}`}
+                  src={getMediaUrl(img.image_url)}
                   alt={img.title}
                   className="w-full h-full object-cover"
                 />

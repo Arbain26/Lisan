@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import { Calendar, ArrowRight, Tag } from "lucide-react";
 import useFetch from "../../hooks/useFetch";
+import { getMediaUrl } from "../../services/mediaUrl";
 
 const NewsCard = ({ article, index }) => {
   const ref = useRef(null);
@@ -18,7 +19,7 @@ const NewsCard = ({ article, index }) => {
       {/* Image */}
       <div className="relative overflow-hidden aspect-[16/9] bg-gray-100 shrink-0">
         <img
-          src={article.image_url ? `http://localhost:5000${article.image_url}` : article.image || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&q=80"}
+          src={article.image_url ? getMediaUrl(article.image_url) : article.image || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&q=80"}
           alt={article.title}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
         />

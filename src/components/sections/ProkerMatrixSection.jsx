@@ -14,7 +14,8 @@ import {
   Info,
   Loader2
 } from "lucide-react";
-import axios from "axios";
+import api from "../../services/api";
+import { getMediaUrl } from "../../services/mediaUrl";
 
 const ProkerMatrixSection = () => {
   const ref = useRef(null);
@@ -36,7 +37,7 @@ const ProkerMatrixSection = () => {
   const fetchPublicProkers = async () => {
     setLoading(true);
     try {
-      const response = await axios.get("http://localhost:5000/api/proker/public", {
+      const response = await api.get("/proker/public", {
         params: { tahun: selectedYear }
       });
       setProkers(response.data);
@@ -84,7 +85,7 @@ const ProkerMatrixSection = () => {
   };
 
   return (
-    <section ref={ref} className="py-24 bg-white border-t border-gray-100">
+    <section ref={ref} className="py-16 sm:py-24 bg-white border-t border-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header */}
@@ -92,72 +93,74 @@ const ProkerMatrixSection = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
-          className="text-center max-w-3xl mx-auto mb-16"
+          className="text-center max-w-3xl mx-auto mb-10 sm:mb-16"
         >
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 mb-5">
             <span className="w-2 h-2 rounded-full bg-emerald-500" />
             <span className="text-emerald-700 text-xs font-inter font-semibold uppercase tracking-widest">Akuntabilitas & Transparansi</span>
           </div>
-          <h2 className="font-poppins font-bold text-4xl sm:text-5xl text-dark mb-4 leading-tight">
+          <h2 className="font-poppins font-bold text-3xl sm:text-4xl lg:text-5xl text-dark mb-4 leading-tight">
             Matriks & Progres Realisasi <span className="text-primary">Kegiatan</span>
           </h2>
-          <p className="font-inter text-gray-500 leading-relaxed">
+          <p className="font-inter text-gray-500 leading-relaxed text-sm sm:text-base">
             Pantau dan ikuti pelaksanaan program kerja LISAN secara real-time. Transparansi bukti pelaksanaan kegiatan untuk menjamin amanah organisasi.
           </p>
         </motion.div>
 
         {/* Filters */}
-        <div className="bg-gray-50 p-5 rounded-3xl border border-gray-150 flex flex-col md:flex-row gap-4 mb-8 shadow-sm">
-          <div className="relative flex-1">
-            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+        <div className="bg-gray-50 p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-gray-150 flex flex-col gap-3 mb-6 shadow-sm">
+          {/* Search */}
+          <div className="relative">
+            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Cari program kerja, kode, atau penanggung jawab..."
-              className="w-full bg-white border border-gray-200 rounded-2xl pl-11 pr-4 py-3 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+              className="w-full bg-white border border-gray-200 rounded-xl sm:rounded-2xl pl-11 pr-4 py-3 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
             />
           </div>
 
-          <div className="flex flex-wrap sm:flex-nowrap gap-3">
+          {/* Selects in a row */}
+          <div className="flex gap-2 sm:gap-3">
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
-              className="bg-white border border-gray-200 rounded-2xl px-4 py-3 text-sm font-inter font-semibold text-gray-700 focus:outline-none shadow-sm"
+              className="flex-1 sm:flex-none bg-white border border-gray-200 rounded-xl sm:rounded-2xl px-3 sm:px-4 py-2.5 text-sm font-inter font-semibold text-gray-700 focus:outline-none shadow-sm min-w-0"
             >
-              <option value="2025/2026">Tahun: 2025/2026</option>
-              <option value="2026/2027">Tahun: 2026/2027</option>
-              <option value="2027/2028">Tahun: 2027/2028</option>
+              <option value="2025/2026">2025/2026</option>
+              <option value="2026/2027">2026/2027</option>
+              <option value="2027/2028">2027/2028</option>
             </select>
 
             <select
               value={indicatorFilter}
               onChange={(e) => setIndicatorFilter(e.target.value)}
-              className="bg-white border border-gray-200 rounded-2xl px-4 py-3 text-sm font-inter font-semibold text-gray-700 focus:outline-none shadow-sm"
+              className="flex-1 sm:flex-none bg-white border border-gray-200 rounded-xl sm:rounded-2xl px-3 sm:px-4 py-2.5 text-sm font-inter font-semibold text-gray-700 focus:outline-none shadow-sm min-w-0"
             >
-              <option value="">Semua Indikator</option>
-              <option value="green">🟢 Sesuai Jadwal</option>
-              <option value="yellow">🟡 Perlu Perhatian</option>
+              <option value="">Semua</option>
+              <option value="green">🟢 Sesuai</option>
+              <option value="yellow">🟡 Perhatian</option>
               <option value="red">🔴 Terlambat</option>
             </select>
           </div>
         </div>
 
         {/* Matrix List */}
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden">
+        <div className="bg-white rounded-2xl sm:rounded-3xl border border-gray-100 shadow-xl overflow-hidden">
           {loading ? (
-            <div className="p-20 text-center flex flex-col items-center justify-center gap-4">
+            <div className="p-16 sm:p-20 text-center flex flex-col items-center justify-center gap-4">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
               <p className="text-sm font-inter text-gray-500 font-medium">Memuat data realisasi kegiatan...</p>
             </div>
           ) : filteredProkers.length === 0 ? (
-            <div className="p-20 text-center flex flex-col items-center justify-center gap-3">
+            <div className="p-12 sm:p-20 text-center flex flex-col items-center justify-center gap-3">
               <div className="text-4xl">📊</div>
               <h3 className="font-poppins font-bold text-gray-800 text-lg">Tidak ada data ditemukan</h3>
               <p className="text-sm text-gray-500 max-w-sm leading-relaxed">Coba ubah kata kunci pencarian atau ganti filter tahun kepengurusan.</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-150">
+            <div className="divide-y divide-gray-100">
               {filteredProkers.map((p) => {
                 const isExpanded = !!expandedRows[p.id];
                 return (
@@ -165,27 +168,27 @@ const ProkerMatrixSection = () => {
                     {/* Row Header */}
                     <div 
                       onClick={() => toggleRow(p.id)}
-                      className="px-6 py-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 cursor-pointer"
+                      className="px-4 sm:px-6 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 cursor-pointer"
                     >
                       <div className="flex-1 min-w-0">
-                        <div className="flex flex-wrap items-center gap-2.5 mb-1.5">
+                        <div className="flex flex-wrap items-center gap-2 mb-1.5">
                           <span className="text-[11px] font-bold font-inter px-2 py-0.5 rounded bg-gray-100 text-gray-600 tracking-wide border border-gray-200">
                             {p.kode}
                           </span>
                           {renderIndicator(p.indicator)}
                         </div>
-                        <h3 className="font-poppins font-bold text-lg text-gray-900 truncate">
+                        <h3 className="font-poppins font-bold text-base sm:text-lg text-gray-900 line-clamp-2 sm:truncate">
                           {p.kegiatan}
                         </h3>
                         <p className="text-xs text-gray-500 font-inter font-medium flex items-center gap-1 mt-1">
-                          <User size={13} className="text-primary" />
-                          <span>PJ: {p.penanggung_jawab}</span>
+                          <User size={12} className="text-primary shrink-0" />
+                          <span className="truncate">PJ: {p.penanggung_jawab}</span>
                         </p>
                       </div>
 
-                      <div className="w-full lg:w-72 shrink-0 space-y-1">
+                      <div className="w-full sm:w-64 shrink-0 space-y-1">
                         <div className="flex items-center justify-between text-xs font-bold font-inter text-gray-500">
-                          <span>Realisasi: {p.schedules.filter(s => s.status === 'Terlaksana').length} / {p.schedules.length} Kegiatan</span>
+                          <span>Realisasi: {p.schedules.filter(s => s.status === 'Terlaksana').length} / {p.schedules.length}</span>
                           <span className={p.progres === 100 ? "text-emerald-600 font-extrabold" : "text-gray-800"}>
                             {Math.round(p.progres)}%
                           </span>
@@ -215,63 +218,74 @@ const ProkerMatrixSection = () => {
 
                     {/* Expanded Grid */}
                     {isExpanded && (
-                      <div className="px-6 pb-6 bg-gray-50/50 border-t border-gray-100 pt-5">
-                        <div className="space-y-5">
+                      <div className="px-4 sm:px-6 pb-5 sm:pb-6 bg-gray-50/50 border-t border-gray-100 pt-4 sm:pt-5">
+                        <div className="space-y-4">
                           <p className="text-xs font-semibold text-gray-400 font-inter uppercase tracking-wider flex items-center gap-1.5">
-                            <Calendar size={13} className="text-primary" />
-                            Timeline Matriks Kerja (Klik tanggal dengan simbol gambar <ImageIcon size={10} className="inline text-emerald-500" /> untuk melihat bukti dokumentasi pelaksanaan)
+                            <Calendar size={13} className="text-primary shrink-0" />
+                            <span className="hidden sm:inline">Timeline Matriks Kerja — Klik tanggal dengan simbol </span>
+                            <span className="sm:hidden">Timeline — Klik </span>
+                            <ImageIcon size={10} className="inline text-emerald-500" />
+                            <span className="hidden sm:inline">untuk melihat bukti dokumentasi</span>
+                            <span className="sm:hidden">untuk lihat bukti</span>
                           </p>
 
-                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3.5">
-                            {monthsOrder.map(month => {
-                              const monthSchedules = p.schedules.filter(s => s.bulan.toLowerCase() === month.toLowerCase());
-                              return (
-                                <div key={month} className="bg-white rounded-2xl p-3.5 border border-gray-200/60 shadow-sm min-h-[90px] flex flex-col">
-                                  <span className="font-poppins font-bold text-[11px] text-gray-400 border-b border-gray-100 pb-1.5 mb-2 block uppercase tracking-wider">
-                                    {month}
-                                  </span>
-                                  <div className="flex flex-wrap gap-1.5 flex-grow content-start">
-                                    {monthSchedules.length === 0 ? (
-                                      <span className="text-[10px] text-gray-400 italic font-medium mt-1">Tidak ada jadwal</span>
-                                    ) : (
-                                      monthSchedules.map(sched => {
-                                        const isCompleted = sched.status === 'Terlaksana';
-                                        const isFailed = sched.status === 'Tidak Terlaksana';
-                                        const hasProof = !!sched.foto_url || !!sched.keterangan;
+                          {/* Horizontal scroll on mobile, grid on larger screens */}
+                          <div className="overflow-x-auto -mx-4 sm:mx-0 pb-2 sm:pb-0">
+                            <div className="flex sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3 px-4 sm:px-0" style={{ minWidth: 'max-content' }}>
+                              {monthsOrder.map(month => {
+                                const monthSchedules = p.schedules.filter(s => s.bulan.toLowerCase() === month.toLowerCase());
+                                return (
+                                  <div
+                                    key={month}
+                                    className="bg-white rounded-xl sm:rounded-2xl p-2.5 sm:p-3.5 border border-gray-200/60 shadow-sm min-h-[80px] sm:min-h-[90px] flex flex-col"
+                                    style={{ minWidth: 120 }}
+                                  >
+                                    <span className="font-poppins font-bold text-[10px] sm:text-[11px] text-gray-400 border-b border-gray-100 pb-1.5 mb-2 block uppercase tracking-wider">
+                                      {month}
+                                    </span>
+                                    <div className="flex flex-col gap-1 flex-grow content-start">
+                                      {monthSchedules.length === 0 ? (
+                                        <span className="text-[10px] text-gray-300 italic font-medium mt-1">—</span>
+                                      ) : (
+                                        monthSchedules.map(sched => {
+                                          const isCompleted = sched.status === 'Terlaksana';
+                                          const isFailed = sched.status === 'Tidak Terlaksana';
+                                          const hasProof = !!sched.foto_url || !!sched.keterangan;
 
-                                        return (
-                                          <button
-                                            key={sched.id}
-                                            disabled={!isCompleted || !hasProof}
-                                            onClick={() => {
-                                              if (isCompleted && hasProof) {
-                                                setSelectedSched(sched);
-                                                setSelectedProkerName(p.kegiatan);
-                                              }
-                                            }}
-                                            className={`px-2 py-1.5 rounded-lg text-xs font-bold border transition-all text-left w-full flex items-center justify-between ${
-                                              isCompleted
-                                                ? "bg-emerald-50 text-emerald-800 border-emerald-100 hover:bg-emerald-100"
-                                                : isFailed
-                                                ? "bg-rose-50 text-rose-800 border-rose-100"
-                                                : "bg-gray-50 text-gray-500 border-gray-100"
-                                            } ${isCompleted && hasProof ? 'cursor-pointer hover:-translate-y-[1px]' : 'cursor-default'}`}
-                                          >
-                                            <span className="truncate max-w-[80%]">{sched.tanggal}</span>
-                                            <div className="flex items-center gap-0.5">
-                                              {isCompleted && hasProof && <ImageIcon size={10} className="text-emerald-500 mr-0.5" />}
-                                              {isCompleted && <CheckCircle2 size={11} className="text-emerald-600 shrink-0" />}
-                                              {isFailed && <XCircle size={11} className="text-rose-600 shrink-0" />}
-                                              {!isCompleted && !isFailed && <Clock size={11} className="text-gray-300 shrink-0" />}
-                                            </div>
-                                          </button>
-                                        );
-                                      })
-                                    )}
+                                          return (
+                                            <button
+                                              key={sched.id}
+                                              disabled={!isCompleted || !hasProof}
+                                              onClick={() => {
+                                                if (isCompleted && hasProof) {
+                                                  setSelectedSched(sched);
+                                                  setSelectedProkerName(p.kegiatan);
+                                                }
+                                              }}
+                                              className={`px-2 py-1.5 rounded-lg text-xs font-bold border transition-all text-left w-full flex items-center justify-between gap-1 touch-manipulation ${
+                                                isCompleted
+                                                  ? "bg-emerald-50 text-emerald-800 border-emerald-100"
+                                                  : isFailed
+                                                  ? "bg-rose-50 text-rose-800 border-rose-100"
+                                                  : "bg-gray-50 text-gray-500 border-gray-100"
+                                              } ${isCompleted && hasProof ? 'cursor-pointer active:scale-95' : 'cursor-default'}`}
+                                            >
+                                              <span className="truncate text-[10px] sm:text-xs">{sched.tanggal}</span>
+                                              <div className="flex items-center gap-0.5 shrink-0">
+                                                {isCompleted && hasProof && <ImageIcon size={9} className="text-emerald-500" />}
+                                                {isCompleted && <CheckCircle2 size={10} className="text-emerald-600" />}
+                                                {isFailed && <XCircle size={10} className="text-rose-600" />}
+                                                {!isCompleted && !isFailed && <Clock size={10} className="text-gray-300" />}
+                                              </div>
+                                            </button>
+                                          );
+                                        })
+                                      )}
+                                    </div>
                                   </div>
-                                </div>
-                              );
-                            })}
+                                );
+                              })}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -287,7 +301,7 @@ const ProkerMatrixSection = () => {
       {/* DOKUMENTASI PROOF MODAL */}
       <AnimatePresence>
         {selectedSched && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -297,38 +311,45 @@ const ProkerMatrixSection = () => {
             />
 
             <motion.div
-              initial={{ scale: 0.95, y: 10, opacity: 0 }}
+              initial={{ scale: 0.96, y: 30, opacity: 0 }}
               animate={{ scale: 1, y: 0, opacity: 1 }}
-              exit={{ scale: 0.95, y: 10, opacity: 0 }}
-              className="bg-white rounded-3xl overflow-hidden shadow-2xl relative z-10 border border-gray-100 w-full max-w-lg"
+              exit={{ scale: 0.96, y: 30, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 380, damping: 30 }}
+              className="bg-white rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl relative z-10 border border-gray-100 w-full sm:max-w-lg max-h-[90vh] overflow-y-auto"
             >
+              {/* Drag handle (mobile) */}
+              <div className="sm:hidden flex justify-center pt-3 pb-1">
+                <div className="w-10 h-1 bg-gray-200 rounded-full" />
+              </div>
+
               {/* Header */}
-              <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+              <div className="px-5 py-4 sm:p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
                 <div>
                   <span className="text-[10px] font-bold font-inter bg-emerald-100 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded">
                     KEGIATAN TERLAKSANA
                   </span>
-                  <h4 className="font-poppins font-extrabold text-gray-900 mt-1.5 leading-snug">
+                  <h4 className="font-poppins font-extrabold text-gray-900 mt-1.5 leading-snug text-sm sm:text-base">
                     {selectedProkerName}
                   </h4>
                 </div>
                 <button
                   onClick={() => setSelectedSched(null)}
                   className="text-gray-400 hover:text-gray-700 bg-white hover:bg-gray-100 p-1.5 border border-gray-200 rounded-full transition-all shrink-0 ml-4 shadow-sm"
+                  aria-label="Tutup"
                 >
                   <X size={16} />
                 </button>
               </div>
 
               {/* Body Content */}
-              <div className="p-6 space-y-5">
+              <div className="p-4 sm:p-6 space-y-4 sm:space-y-5">
                 {/* Photo */}
                 {selectedSched.foto_url ? (
-                  <div className="rounded-2xl overflow-hidden border border-gray-200 shadow-inner bg-gray-50 flex items-center justify-center p-2 max-h-[350px]">
+                  <div className="rounded-xl sm:rounded-2xl overflow-hidden border border-gray-200 shadow-inner bg-gray-50 flex items-center justify-center">
                     <img 
-                      src={`http://localhost:5000${selectedSched.foto_url}`} 
+                      src={getMediaUrl(selectedSched.foto_url)} 
                       alt="Dokumentasi Pelaksanaan" 
-                      className="w-full h-auto max-h-[330px] object-contain rounded-xl"
+                      className="w-full h-auto max-h-[50vh] object-contain"
                     />
                   </div>
                 ) : (
@@ -338,11 +359,11 @@ const ProkerMatrixSection = () => {
                   </div>
                 )}
 
-                {/* Notes details */}
+                {/* Notes */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
                     <Info size={14} className="text-primary" />
-                    <span>Laporan Pelaksanaan ({selectedSched.bulan} - {selectedSched.tanggal})</span>
+                    <span>Laporan ({selectedSched.bulan} - {selectedSched.tanggal})</span>
                   </div>
                   <div className="bg-emerald-50/30 border border-emerald-100/60 p-4 rounded-2xl">
                     <p className="text-sm font-inter text-gray-700 leading-relaxed font-semibold">
@@ -353,10 +374,10 @@ const ProkerMatrixSection = () => {
               </div>
 
               {/* Footer */}
-              <div className="p-5 bg-gray-50 border-t border-gray-100 flex justify-end">
+              <div className="px-5 py-4 sm:p-5 bg-gray-50 border-t border-gray-100 flex justify-end">
                 <button
                   onClick={() => setSelectedSched(null)}
-                  className="px-5 py-2.5 rounded-xl font-inter font-bold text-xs bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"
+                  className="px-5 py-2.5 rounded-xl font-inter font-bold text-xs bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors touch-manipulation"
                 >
                   Tutup Laporan
                 </button>

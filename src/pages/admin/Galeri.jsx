@@ -4,6 +4,7 @@ import useCRUD from "../../hooks/useCRUD";
 import Modal from "../../components/ui/Modal";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 import EmptyState from "../../components/ui/EmptyState";
+import { getMediaUrl } from "../../services/mediaUrl";
 
 const Galeri = () => {
   const { data, loading, isSubmitting, addItem, deleteItem } = useCRUD("/gallery");
@@ -74,7 +75,7 @@ const Galeri = () => {
             {data.map((item) => (
               <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden group">
                 <div className="relative aspect-video overflow-hidden bg-gray-100">
-                  <img src={`http://localhost:5000${item.image_url}`} alt={item.title} className="w-full h-full object-cover" />
+                  <img src={getMediaUrl(item.image_url)} alt={item.title} className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <button onClick={() => handleOpenDelete(item)} className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-lg transition-transform transform scale-90 group-hover:scale-100">
                       <Trash2 size={16} />

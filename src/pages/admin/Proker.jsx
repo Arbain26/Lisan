@@ -27,6 +27,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import api from "../../services/api";
 import { useToast } from "../../components/ui/ToastProvider";
+import { getMediaUrl } from "../../services/mediaUrl";
 
 const Proker = () => {
   const toast = useToast();
@@ -227,7 +228,7 @@ const Proker = () => {
       setProofScheduleId(scheduleId);
       setProofNotes(sched?.keterangan || "");
       setProofImage(null);
-      setProofImagePreview(sched?.foto_url ? `http://localhost:5000${sched.foto_url}` : null);
+      setProofImagePreview(sched?.foto_url ? getMediaUrl(sched.foto_url) : null);
       setIsProofModalOpen(true);
       return;
     }
@@ -685,7 +686,7 @@ const Proker = () => {
                           </div>
                         </div>
                         <a
-                          href={`http://localhost:5000${file.file_path}`}
+                          href={getMediaUrl(file.file_path)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-1.5 bg-gray-50 hover:bg-emerald-50 text-gray-500 hover:text-emerald-600 border border-gray-200 hover:border-emerald-200 rounded-lg transition-colors shrink-0"
@@ -894,7 +895,7 @@ const Proker = () => {
                                                               setProofScheduleId(sched.id);
                                                               setProofNotes(sched.keterangan || "");
                                                               setProofImage(null);
-                                                              setProofImagePreview(sched.foto_url ? `http://localhost:5000${sched.foto_url}` : null);
+                                                              setProofImagePreview(sched.foto_url ? getMediaUrl(sched.foto_url) : null);
                                                               setIsProofModalOpen(true);
                                                             }}
                                                             className="p-0.5 text-emerald-600 hover:bg-emerald-50 rounded"

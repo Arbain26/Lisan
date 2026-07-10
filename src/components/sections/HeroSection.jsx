@@ -13,6 +13,7 @@ const fallbackSlides = [
 ];
 
 import api from "../../services/api";
+import { getMediaUrl } from "../../services/mediaUrl";
 
 const HeroSection = () => {
   const [current, setCurrent] = useState(0);
@@ -27,7 +28,7 @@ const HeroSection = () => {
           // Format image_url to handle local or absolute URLs
           const formattedSlides = response.data.map(slide => ({
             ...slide,
-            bg: slide.image_url.startsWith('http') ? slide.image_url : `http://localhost:5000${slide.image_url}`
+            bg: slide.image_url.startsWith('http') ? slide.image_url : getMediaUrl(slide.image_url)
           }));
           setSlides(formattedSlides);
         }

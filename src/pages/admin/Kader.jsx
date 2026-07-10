@@ -6,9 +6,11 @@ import ConfirmModal from "../../components/ui/ConfirmModal";
 import EmptyState from "../../components/ui/EmptyState";
 import * as XLSX from 'xlsx';
 import api from "../../services/api";
+import { useToast } from "../../components/ui/ToastProvider";
 
 const Kader = () => {
-  const { data, loading, isSubmitting, addItem, updateItem, deleteItem } = useCRUD("/kader");
+  const { data, loading, isSubmitting, addItem, updateItem, deleteItem, refreshData } = useCRUD("/kader");
+  const toast = useToast();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filterAngkatan, setFilterAngkatan] = useState("");
@@ -179,7 +181,7 @@ const Kader = () => {
         }
 
         if (formattedData.length === 0) {
-          alert("Tidak ada data valid yang ditemukan di file Excel. Pastikan kolom Nama, Institusi, Angkatan, dan Tahun terisi.");
+          toast.warning("Tidak ada data valid yang ditemukan di file Excel. Pastikan kolom Nama, Institusi, Angkatan, dan Tahun terisi.");
           return;
         }
 
@@ -193,11 +195,11 @@ const Kader = () => {
             console.error("Error inserting kader row:", err);
           }
         }
-        alert(`Berhasil mengimpor ${successCount} data kader!`);
-        window.location.reload();
+        toast.success(`Berhasil mengimpor ${successCount} dari ${formattedData.length} data kader!`);
+        await refreshData(); // Refresh table without reloading the whole page
       } catch (error) {
         console.error("Error importing file:", error);
-        alert("Gagal mengimpor file Excel. Pastikan format sesuai.");
+        toast.error("Gagal mengimpor file Excel. Pastikan format sesuai.");
       }
     };
     reader.readAsBinaryString(file);

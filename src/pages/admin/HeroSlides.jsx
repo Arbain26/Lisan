@@ -4,6 +4,7 @@ import useCRUD from "../../hooks/useCRUD";
 import Modal from "../../components/ui/Modal";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 import EmptyState from "../../components/ui/EmptyState";
+import { getMediaUrl } from "../../services/mediaUrl";
 
 const HeroSlides = () => {
   const { data, loading, isSubmitting, addItem, updateItem, deleteItem } = useCRUD("/hero");
@@ -35,11 +36,7 @@ const HeroSlides = () => {
       sub: item.sub, 
       image: null 
     });
-    setPreview(
-      item.image_url.startsWith('http') 
-        ? item.image_url 
-        : `http://localhost:5000${item.image_url}`
-    );
+      setPreview(getMediaUrl(item.image_url));
     setIsModalOpen(true);
   };
 
@@ -113,7 +110,7 @@ const HeroSlides = () => {
               <div key={item.id} className="bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-md transition-shadow group flex flex-col">
                 <div className="aspect-[16/9] relative bg-gray-100 overflow-hidden">
                   <img 
-                    src={item.image_url.startsWith('http') ? item.image_url : `http://localhost:5000${item.image_url}`} 
+                    src={getMediaUrl(item.image_url)} 
                     alt={item.title} 
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                   />

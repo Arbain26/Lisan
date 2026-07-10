@@ -4,6 +4,7 @@ import useCRUD from "../../hooks/useCRUD";
 import Modal from "../../components/ui/Modal";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 import EmptyState from "../../components/ui/EmptyState";
+import { getMediaUrl } from "../../services/mediaUrl";
 
 // Map available icon string names to components
 const iconMap = {
@@ -374,7 +375,7 @@ const Struktur = () => {
                       <td className="px-6 py-4">
                         <div className="w-10 h-10 rounded-full bg-gray-100 border border-gray-200 overflow-hidden flex items-center justify-center text-gray-400 font-poppins font-bold text-sm">
                           {item.foto_url ? (
-                            <img src={`http://localhost:5000${item.foto_url}`} alt={item.nama} className="w-full h-full object-cover" />
+                            <img src={getMediaUrl(item.foto_url)} alt={item.nama} className="w-full h-full object-cover" />
                           ) : (
                             item.nama.charAt(0)
                           )}

@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Calendar, ArrowRight, Tag } from "lucide-react";
 import useFetch from "../hooks/useFetch";
+import { getMediaUrl } from "../services/mediaUrl";
 
 const PageHeader = ({ title, subtitle, badge }) => (
   <div
@@ -59,7 +60,7 @@ const NewsPage = () => {
                 {/* Image */}
                 <div className="relative overflow-hidden aspect-[16/9] bg-gray-100 shrink-0">
                   <img
-                    src={article.image_url ? `http://localhost:5000${article.image_url}` : article.image || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&q=80"}
+                    src={article.image_url ? getMediaUrl(article.image_url) : article.image || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&q=80"}
                     alt={article.title}
                     className="w-full h-full object-cover transition-transform duration-700"
                   />

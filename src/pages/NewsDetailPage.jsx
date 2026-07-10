@@ -2,6 +2,7 @@ import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Calendar, Tag, User, Loader2 } from "lucide-react";
 import useFetch from "../hooks/useFetch";
 import { motion } from "framer-motion";
+import { getMediaUrl } from "../services/mediaUrl";
 
 const NewsDetailPage = () => {
   const { id } = useParams();
@@ -45,7 +46,7 @@ const NewsDetailPage = () => {
           {/* Header Image */}
           <div className="w-full h-[300px] md:h-[450px] relative">
             <img 
-              src={article.image_url ? `http://localhost:5000${article.image_url}` : article.image || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&q=80"}
+              src={article.image_url ? getMediaUrl(article.image_url) : article.image || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&q=80"}
               alt={article.title}
               className="w-full h-full object-cover"
             />

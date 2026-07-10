@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Users, BookOpen, HeartHandshake, Laptop, Megaphone, Folder, Award, Shield, HelpCircle, ArrowRight, Loader2 } from "lucide-react";
 import api from "../../services/api";
+import { getMediaUrl } from "../../services/mediaUrl";
 
 const iconMap = {
   Users: Users,
@@ -47,7 +48,7 @@ const MemberCard = ({ member }) => (
     <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-primary to-amber-500 p-0.5 shadow-md mb-4 overflow-hidden relative">
       <div className="w-full h-full rounded-full bg-white overflow-hidden flex items-center justify-center text-primary font-poppins font-bold text-3xl">
         {member.foto_url ? (
-          <img src={`http://localhost:5000${member.foto_url}`} alt={member.nama} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+          <img src={getMediaUrl(member.foto_url)} alt={member.nama} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
         ) : (
           member.nama.charAt(0)
         )}
