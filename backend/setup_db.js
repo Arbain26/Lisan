@@ -214,15 +214,15 @@ async function run() {
   console.log('Creating proker_notifications table...');
   await connection.query(`
     CREATE TABLE IF NOT EXISTS \`proker_notifications\` (
-      `id` int(11) NOT NULL AUTO_INCREMENT,
-      `proker_id` int(11) NOT NULL,
-      `type` varchar(50) NOT NULL,
-      `message` text NOT NULL,
-      `is_read` tinyint(1) DEFAULT 0,
-      `created_at` timestamp DEFAULT current_timestamp(),
-      PRIMARY KEY (`id`),
-      KEY `proker_id` (`proker_id`),
-      CONSTRAINT `fk_setup_notifications_proker` FOREIGN KEY (`proker_id`) REFERENCES `proker` (`id`) ON DELETE CASCADE
+      \`id\` int(11) NOT NULL AUTO_INCREMENT,
+      \`proker_id\` int(11) NOT NULL,
+      \`type\` varchar(50) NOT NULL,
+      \`message\` text NOT NULL,
+      \`is_read\` tinyint(1) DEFAULT 0,
+      \`created_at\` timestamp DEFAULT current_timestamp(),
+      PRIMARY KEY (\`id\`),
+      KEY \`proker_id\` (\`proker_id\`),
+      CONSTRAINT \`fk_setup_notifications_proker\` FOREIGN KEY (\`proker_id\`) REFERENCES \`proker\` (\`id\`) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
 
