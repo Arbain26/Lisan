@@ -370,8 +370,8 @@ exports.uploadProker = async (req, res) => {
                           row.some(cell => cell && monthsOrder.includes(cell.toString().trim()));
       if (isHeaderRow) continue;
 
-      const kegiatan = row[kegiatanIdx]?.toString().trim();
-      const pj = row[pjIdx]?.toString().trim();
+      const kegiatan = row[kegiatanIdx]?.toString().trim().replace(/\s+/g, ' ');
+      const pj = row[pjIdx]?.toString().trim().replace(/\s+/g, ' ');
       
       // If kegiatan and pj are both empty, we treat it as an empty row and skip
       if (!kegiatan && !pj) continue;
@@ -391,6 +391,7 @@ exports.uploadProker = async (req, res) => {
 
       // Parse schedule dates using the column mapping we discovered
       const schedules = [];
+      const seenScheds = new Set();
       monthsOrder.forEach(month => {
         const mIdx = monthColMap[month];
         if (mIdx !== undefined && row[mIdx]) {
@@ -398,10 +399,14 @@ exports.uploadProker = async (req, res) => {
           if (val) {
             const parts = val.split(/[,;\n]+/).map(p => p.trim()).filter(Boolean);
             parts.forEach(part => {
-              schedules.push({
-                bulan: month,
-                tanggal: part
-              });
+              const schedKey = `${month.toLowerCase()}_${part.toLowerCase()}`;
+              if (!seenScheds.has(schedKey)) {
+                seenScheds.add(schedKey);
+                schedules.push({
+                  bulan: month,
+                  tanggal: part
+                });
+              }
             });
           }
         }
@@ -426,17 +431,17 @@ exports.uploadProker = async (req, res) => {
 
     // Process DB changes
     for (const data of prokerData) {
-      // 1. Check if Proker exists by Kode or Kegiatan Name in this year
+      // 1. Check if Proker exists by Kode or Kegiatan Name in this year (using TRIM to ignore spacing differences)
       let prokerId = null;
       let [existing] = await connection.query(
-        'SELECT id FROM proker WHERE kode = ? AND tahun_kepengurusan = ?',
+        'SELECT id FROM proker WHERE TRIM(kode) = TRIM(?) AND tahun_kepengurusan = ?',
         [data.kode, tahun_kepengurusan]
       );
 
       if (existing.length === 0) {
-        // Fallback search by Kegiatan name
+        // Fallback search by Kegiatan name (using TRIM to ignore spacing differences)
         [existing] = await connection.query(
-          'SELECT id, kode FROM proker WHERE kegiatan = ? AND tahun_kepengurusan = ?',
+          'SELECT id, kode FROM proker WHERE TRIM(kegiatan) = TRIM(?) AND tahun_kepengurusan = ?',
           [data.kegiatan, tahun_kepengurusan]
         );
       }
