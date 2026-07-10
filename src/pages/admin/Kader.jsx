@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, Search, Edit2, Trash2, Download, Loader2, Users, GraduationCap, UserCheck, UserX } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Download, Loader2, Users, GraduationCap, School, Calendar } from "lucide-react";
 import useCRUD from "../../hooks/useCRUD";
 import Modal from "../../components/ui/Modal";
 import ConfirmModal from "../../components/ui/ConfirmModal";
@@ -12,59 +12,73 @@ const Kader = () => {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filterAngkatan, setFilterAngkatan] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
+  const [filterTahun, setFilterTahun] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
   const [formData, setFormData] = useState({
     nama: "",
-    nim: "",
+    institusi: "",
     angkatan: "",
-    jurusan: "",
-    no_hp: "",
-    status: "Aktif",
+    tahun: "",
   });
 
   // Calculate statistics from data
   const stats = useMemo(() => {
     const total = data.length;
-    const aktif = data.filter(k => k.status === 'Aktif').length;
-    const alumni = data.filter(k => k.status === 'Alumni').length;
-    const pasif = data.filter(k => k.status === 'Pasif').length;
-    return { total, aktif, alumni, pasif };
+    
+    // Unique institutions
+    const uniqueInstitusiList = [...new Set(data.map(k => k.institusi?.toLowerCase()).filter(Boolean))];
+    const totalInstitusi = uniqueInstitusiList.length;
+
+    // Unique generations (angkatan)
+    const uniqueAngkatanList = [...new Set(data.map(k => k.angkatan?.toLowerCase()).filter(Boolean))];
+    const totalAngkatan = uniqueAngkatanList.length;
+
+    // Latest cohort year
+    const years = data.map(k => parseInt(k.tahun)).filter(Boolean);
+    const latestYear = years.length > 0 ? Math.max(...years) : "-";
+
+    return { total, totalInstitusi, totalAngkatan, latestYear };
   }, [data]);
 
   // Extract all unique cohorts (angkatan) from the data to build dynamic filter options
   const uniqueAngkatan = useMemo(() => {
     const list = data.map(item => item.angkatan).filter(Boolean);
     const unique = [...new Set(list)];
-    return unique.sort((a, b) => b.localeCompare(a)); // Sort descending (e.g. 2025, 2024...)
+    return unique.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  }, [data]);
+
+  // Extract all unique years (tahun) from the data to build dynamic filter options
+  const uniqueTahun = useMemo(() => {
+    const list = data.map(item => item.tahun).filter(Boolean);
+    const unique = [...new Set(list)];
+    return unique.sort((a, b) => b.localeCompare(a, undefined, { numeric: true })); // Descending years
   }, [data]);
 
   const filteredData = useMemo(() => {
     return data.filter((item) => {
       const matchSearch = 
         item.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (item.nim && item.nim.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (item.jurusan && item.jurusan.toLowerCase().includes(searchTerm.toLowerCase()));
+        item.institusi.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.angkatan.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.tahun.includes(searchTerm);
         
       const matchAngkatan = filterAngkatan === "" || item.angkatan === filterAngkatan;
-      const matchStatus = filterStatus === "" || item.status === filterStatus;
+      const matchTahun = filterTahun === "" || item.tahun === filterTahun;
       
-      return matchSearch && matchAngkatan && matchStatus;
+      return matchSearch && matchAngkatan && matchTahun;
     });
-  }, [data, searchTerm, filterAngkatan, filterStatus]);
+  }, [data, searchTerm, filterAngkatan, filterTahun]);
 
   const handleOpenAdd = () => {
     setSelectedItem(null);
     setFormData({
       nama: "",
-      nim: "",
-      angkatan: new Date().getFullYear().toString(), // Default to current year
-      jurusan: "",
-      no_hp: "",
-      status: "Aktif"
+      institusi: "",
+      angkatan: "",
+      tahun: new Date().getFullYear().toString(),
     });
     setIsModalOpen(true);
   };
@@ -73,11 +87,9 @@ const Kader = () => {
     setSelectedItem(item);
     setFormData({
       nama: item.nama,
-      nim: item.nim || "",
+      institusi: item.institusi,
       angkatan: item.angkatan,
-      jurusan: item.jurusan || "",
-      no_hp: item.no_hp || "",
-      status: item.status
+      tahun: item.tahun
     });
     setIsModalOpen(true);
   };
@@ -89,7 +101,12 @@ const Kader = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.nama.trim() || !formData.angkatan.trim()) return;
+    if (
+      !formData.nama.trim() || 
+      !formData.institusi.trim() || 
+      !formData.angkatan.trim() || 
+      !formData.tahun.trim()
+    ) return;
 
     if (selectedItem) {
       await updateItem(selectedItem.id, formData);
@@ -131,16 +148,14 @@ const Kader = () => {
           }
         }
 
-        let colMap = { nama: -1, nim: -1, angkatan: -1, jurusan: -1, no_hp: -1, status: -1 };
+        let colMap = { nama: -1, institusi: -1, angkatan: -1, tahun: -1 };
 
         headers.forEach((h, index) => {
           if (!h) return;
           if (colMap.nama === -1 && (h.includes('nama') || h.includes('name'))) colMap.nama = index;
-          else if (colMap.nim === -1 && (h.includes('nim') || h.includes('stambuk') || h.includes('id'))) colMap.nim = index;
-          else if (colMap.angkatan === -1 && (h.includes('angkatan') || h.includes('tahun') || h.includes('cohort') || h.includes('classof'))) colMap.angkatan = index;
-          else if (colMap.jurusan === -1 && (h.includes('jurusan') || h.includes('prodi') || h.includes('programstudi') || h.includes('departemen'))) colMap.jurusan = index;
-          else if (colMap.no_hp === -1 && (h.includes('hp') || h.includes('tel') || h.includes('wa') || h.includes('kontak') || h.includes('nomor'))) colMap.no_hp = index;
-          else if (colMap.status === -1 && (h.includes('status') || h.includes('kondisi'))) colMap.status = index;
+          else if (colMap.institusi === -1 && (h.includes('institusi') || h.includes('kampus') || h.includes('universitas') || h.includes('lembaga') || h.includes('sekolah') || h.includes('instansi'))) colMap.institusi = index;
+          else if (colMap.angkatan === -1 && (h.includes('angkatan') || h.includes('generasi') || h.includes('cohort') || h.includes('ke'))) colMap.angkatan = index;
+          else if (colMap.tahun === -1 && (h.includes('tahun') || h.includes('year') || h.includes('masuk'))) colMap.tahun = index;
         });
 
         const formattedData = [];
@@ -149,32 +164,22 @@ const Kader = () => {
           if (row.length === 0 || !row.some(cell => cell)) continue;
           
           const namaVal = colMap.nama !== -1 ? row[colMap.nama] : "";
-          if (!namaVal) continue;
+          const institusiVal = colMap.institusi !== -1 ? row[colMap.institusi] : "";
+          const angkatanVal = colMap.angkatan !== -1 ? row[colMap.angkatan] : "";
+          const tahunVal = colMap.tahun !== -1 ? row[colMap.tahun] : "";
 
-          // Default generation if column not found or empty
-          const angkatanVal = colMap.angkatan !== -1 && row[colMap.angkatan]
-            ? row[colMap.angkatan].toString().replace(/\D/g, '')
-            : new Date().getFullYear().toString();
-
-          let statusVal = 'Aktif';
-          if (colMap.status !== -1 && row[colMap.status]) {
-            const rawStatus = row[colMap.status].toString().toLowerCase();
-            if (rawStatus.includes('alumni') || rawStatus.includes('lulus')) statusVal = 'Alumni';
-            else if (rawStatus.includes('pasif') || rawStatus.includes('tidak aktif') || rawStatus.includes('keluar')) statusVal = 'Pasif';
-          }
+          if (!namaVal || !institusiVal || !angkatanVal || !tahunVal) continue;
 
           formattedData.push({
-            nama: (namaVal || "").toString(),
-            nim: colMap.nim !== -1 && row[colMap.nim] ? row[colMap.nim].toString() : null,
-            angkatan: angkatanVal || new Date().getFullYear().toString(),
-            jurusan: colMap.jurusan !== -1 && row[colMap.jurusan] ? row[colMap.jurusan].toString() : null,
-            no_hp: colMap.no_hp !== -1 && row[colMap.no_hp] ? row[colMap.no_hp].toString().replace(/\D/g, '') : null,
-            status: statusVal
+            nama: namaVal.toString().trim(),
+            institusi: institusiVal.toString().trim(),
+            angkatan: angkatanVal.toString().trim(),
+            tahun: tahunVal.toString().replace(/\D/g, '')
           });
         }
 
         if (formattedData.length === 0) {
-          alert("Tidak ada data valid yang ditemukan di file Excel. Pastikan ada kolom bernama 'Nama'.");
+          alert("Tidak ada data valid yang ditemukan di file Excel. Pastikan kolom Nama, Institusi, Angkatan, dan Tahun terisi.");
           return;
         }
 
@@ -205,7 +210,7 @@ const Kader = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-poppins font-bold text-gray-900">Database Kader</h1>
-          <p className="text-sm font-inter text-gray-500 mt-1">Kelola data pembinaan kader LISAN antar angkatan</p>
+          <p className="text-sm font-inter text-gray-500 mt-1">Kelola data pembinaan kader LISAN secara manual atau via Excel</p>
         </div>
         <div className="flex gap-2">
           <label className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-4 py-2.5 rounded-xl font-inter font-medium transition-colors cursor-pointer">
@@ -232,36 +237,36 @@ const Kader = () => {
           </div>
         </div>
 
-        {/* Kader Aktif */}
+        {/* Total Institusi */}
         <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
           <div className="p-3.5 bg-emerald-50 text-emerald-600 rounded-xl">
-            <UserCheck size={24} />
+            <School size={24} />
           </div>
           <div>
-            <p className="text-xs text-gray-400 font-inter font-bold uppercase tracking-wider">Kader Aktif</p>
-            <h3 className="text-2xl font-poppins font-extrabold text-gray-800 mt-0.5">{stats.aktif}</h3>
+            <p className="text-xs text-gray-400 font-inter font-bold uppercase tracking-wider">Total Institusi</p>
+            <h3 className="text-2xl font-poppins font-extrabold text-gray-800 mt-0.5">{stats.totalInstitusi}</h3>
           </div>
         </div>
 
-        {/* Alumni */}
+        {/* Total Angkatan */}
         <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
           <div className="p-3.5 bg-purple-50 text-purple-600 rounded-xl">
             <GraduationCap size={24} />
           </div>
           <div>
-            <p className="text-xs text-gray-400 font-inter font-bold uppercase tracking-wider">Alumni</p>
-            <h3 className="text-2xl font-poppins font-extrabold text-gray-800 mt-0.5">{stats.alumni}</h3>
+            <p className="text-xs text-gray-400 font-inter font-bold uppercase tracking-wider">Total Angkatan</p>
+            <h3 className="text-2xl font-poppins font-extrabold text-gray-800 mt-0.5">{stats.totalAngkatan}</h3>
           </div>
         </div>
 
-        {/* Kader Pasif */}
+        {/* Tahun Terbaru */}
         <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
           <div className="p-3.5 bg-amber-50 text-amber-600 rounded-xl">
-            <UserX size={24} />
+            <Calendar size={24} />
           </div>
           <div>
-            <p className="text-xs text-gray-400 font-inter font-bold uppercase tracking-wider">Kader Pasif</p>
-            <h3 className="text-2xl font-poppins font-extrabold text-gray-800 mt-0.5">{stats.pasif}</h3>
+            <p className="text-xs text-gray-400 font-inter font-bold uppercase tracking-wider">Tahun Terbaru</p>
+            <h3 className="text-2xl font-poppins font-extrabold text-gray-800 mt-0.5">{stats.latestYear}</h3>
           </div>
         </div>
 
@@ -273,7 +278,7 @@ const Kader = () => {
           <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="Cari nama kader, NIM, atau program studi/jurusan..."
+            placeholder="Cari nama kader, institusi, atau angkatan..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
@@ -288,21 +293,21 @@ const Kader = () => {
             className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all sm:min-w-[150px] font-semibold text-gray-700"
           >
             <option value="">Semua Angkatan</option>
-            {uniqueAngkatan.map(year => (
-              <option key={year} value={year}>Angkatan {year}</option>
+            {uniqueAngkatan.map(ang => (
+              <option key={ang} value={ang}>Angkatan {ang}</option>
             ))}
           </select>
 
-          {/* Status Filter */}
+          {/* Tahun Filter */}
           <select 
-            value={filterStatus} 
-            onChange={(e) => setFilterStatus(e.target.value)} 
+            value={filterTahun} 
+            onChange={(e) => setFilterTahun(e.target.value)} 
             className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all sm:min-w-[150px] font-semibold text-gray-700"
           >
-            <option value="">Semua Status</option>
-            <option value="Aktif">Aktif</option>
-            <option value="Alumni">Alumni</option>
-            <option value="Pasif">Pasif</option>
+            <option value="">Semua Tahun</option>
+            {uniqueTahun.map(yr => (
+              <option key={yr} value={yr}>Tahun {yr}</option>
+            ))}
           </select>
         </div>
       </div>
@@ -315,7 +320,7 @@ const Kader = () => {
           </div>
         ) : filteredData.length === 0 ? (
           <EmptyState 
-            isSearch={searchTerm !== "" || filterAngkatan !== "" || filterStatus !== ""} 
+            isSearch={searchTerm !== "" || filterAngkatan !== "" || filterTahun !== ""} 
             message="Data kader tidak ditemukan" 
             subMessage="Gunakan pencarian kata kunci lain atau bersihkan filter." 
           />
@@ -327,11 +332,9 @@ const Kader = () => {
                   <tr className="bg-gray-50 border-b border-gray-100 text-gray-400 font-inter font-semibold text-xs uppercase tracking-wider">
                     <th className="px-6 py-4 text-center w-12">No</th>
                     <th className="px-6 py-4">Nama Lengkap</th>
-                    <th className="px-6 py-4">NIM</th>
+                    <th className="px-6 py-4">Institusi / Kampus</th>
                     <th className="px-6 py-4">Angkatan</th>
-                    <th className="px-6 py-4">Jurusan / Prodi</th>
-                    <th className="px-6 py-4">No. HP (WhatsApp)</th>
-                    <th className="px-6 py-4">Status</th>
+                    <th className="px-6 py-4">Tahun</th>
                     <th className="px-6 py-4 text-right">Aksi</th>
                   </tr>
                 </thead>
@@ -340,36 +343,15 @@ const Kader = () => {
                     <tr key={item.id} className="hover:bg-gray-50/50 transition-colors group">
                       <td className="px-6 py-4 text-center text-gray-500 font-medium">{index + 1}</td>
                       <td className="px-6 py-4 font-poppins font-bold text-gray-900">{item.nama}</td>
-                      <td className="px-6 py-4 text-gray-600 font-medium">{item.nim || "-"}</td>
+                      <td className="px-6 py-4 text-gray-700 font-semibold">{item.institusi}</td>
                       <td className="px-6 py-4">
-                        <span className="bg-blue-50 text-blue-700 px-2.5 py-0.5 rounded-full font-bold text-xs">
+                        <span className="bg-purple-50 text-purple-700 px-2.5 py-0.5 rounded-full font-bold text-xs">
                           {item.angkatan}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-gray-600 font-medium">{item.jurusan || "-"}</td>
-                      <td className="px-6 py-4">
-                        {item.no_hp ? (
-                          <a
-                            href={`https://wa.me/${item.no_hp.startsWith('0') ? '62' + item.no_hp.slice(1) : item.no_hp}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-emerald-600 hover:text-emerald-700 hover:underline font-bold"
-                          >
-                            {item.no_hp}
-                          </a>
-                        ) : (
-                          <span className="text-gray-400 italic">Tidak ada nomor</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${
-                          item.status === 'Aktif'
-                            ? "bg-emerald-100 text-emerald-800"
-                            : item.status === 'Alumni'
-                            ? "bg-purple-100 text-purple-800"
-                            : "bg-amber-100 text-amber-800"
-                        }`}>
-                          {item.status}
+                      <td className="px-6 py-4 text-gray-600 font-semibold">
+                        <span className="bg-blue-50 text-blue-700 px-2.5 py-0.5 rounded-full font-bold text-xs">
+                          {item.tahun}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
@@ -388,7 +370,7 @@ const Kader = () => {
               </table>
             </div>
             <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 text-sm font-inter text-gray-500">
-              Menampilkan {filteredData.length} kader
+              Menampilkan {filteredData.length} data kader
             </div>
           </>
         )}
@@ -396,7 +378,7 @@ const Kader = () => {
 
       {/* CRUD MODAL */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={selectedItem ? "Edit Data Kader" : "Tambah Kader Baru"}>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 font-semibold">
           <div className="space-y-1.5">
             <label className="text-sm font-inter font-medium text-gray-700">Nama Lengkap</label>
             <input 
@@ -408,69 +390,47 @@ const Kader = () => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-sm font-inter font-medium text-gray-700">NIM / Stambuk</label>
-              <input 
-                type="text" 
-                value={formData.nim} 
-                onChange={(e) => setFormData({ ...formData, nim: e.target.value })} 
-                className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-semibold" 
-              />
-            </div>
-            
-            <div className="space-y-1.5">
-              <label className="text-sm font-inter font-medium text-gray-700">Angkatan</label>
-              <input 
-                type="text" 
-                required 
-                placeholder="Cth: 2024"
-                maxLength="4"
-                value={formData.angkatan} 
-                onChange={(e) => setFormData({ ...formData, angkatan: e.target.value.replace(/\D/g, "") })} 
-                className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-semibold" 
-              />
-            </div>
-          </div>
-
           <div className="space-y-1.5">
-            <label className="text-sm font-inter font-medium text-gray-700">Program Studi / Jurusan</label>
+            <label className="text-sm font-inter font-medium text-gray-700">Institusi / Kampus / Sekolah</label>
             <input 
               type="text" 
-              value={formData.jurusan} 
-              onChange={(e) => setFormData({ ...formData, jurusan: e.target.value })} 
+              required
+              placeholder="Cth: Universitas Hasanuddin"
+              value={formData.institusi} 
+              onChange={(e) => setFormData({ ...formData, institusi: e.target.value })} 
               className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-semibold" 
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-sm font-inter font-medium text-gray-700">Nomor WhatsApp</label>
+              <label className="text-sm font-inter font-medium text-gray-700">Angkatan Berapa</label>
               <input 
-                type="tel" 
-                placeholder="Cth: 08123456789"
-                value={formData.no_hp} 
-                onChange={(e) => setFormData({ ...formData, no_hp: e.target.value.replace(/\D/g, "") })} 
+                type="text" 
+                required 
+                placeholder="Cth: 27 atau Angkatan 27"
+                value={formData.angkatan} 
+                onChange={(e) => setFormData({ ...formData, angkatan: e.target.value })} 
                 className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-semibold" 
               />
             </div>
-
+            
             <div className="space-y-1.5">
-              <label className="text-sm font-inter font-medium text-gray-700">Status Keanggotaan</label>
-              <select 
-                value={formData.status} 
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })} 
-                className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-semibold text-gray-700"
-              >
-                <option value="Aktif">Aktif</option>
-                <option value="Alumni">Alumni</option>
-                <option value="Pasif">Pasif</option>
-              </select>
+              <label className="text-sm font-inter font-medium text-gray-700">Tahun Masuk</label>
+              <input 
+                type="text" 
+                required 
+                placeholder="Cth: 2024"
+                maxLength="4"
+                value={formData.tahun} 
+                onChange={(e) => setFormData({ ...formData, tahun: e.target.value.replace(/\D/g, "") })} 
+                className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-semibold" 
+              />
             </div>
           </div>
 
           <div className="flex gap-3 pt-4 border-t border-gray-100">
-            <button type="button" onClick={() => setIsModalOpen(false)} disabled={isSubmitting} className="flex-1 px-4 py-2.5 rounded-xl font-inter font-medium text-gray-700 bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors">
+            <button type="button" onClick={() => setIsModalOpen(false)} disabled={isSubmitting} className="flex-1 px-4 py-2.5 rounded-xl font-inter font-semibold text-gray-700 bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors">
               Batal
             </button>
             <button type="submit" disabled={isSubmitting} className="flex-1 px-4 py-2.5 rounded-xl font-inter font-medium text-white bg-primary hover:bg-red-800 transition-colors flex items-center justify-center shadow-sm shadow-primary/20">

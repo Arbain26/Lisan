@@ -244,11 +244,9 @@ async function run() {
     CREATE TABLE IF NOT EXISTS \`kader\` (
       \`id\` int(11) NOT NULL AUTO_INCREMENT,
       \`nama\` varchar(150) NOT NULL,
-      \`nim\` varchar(50) DEFAULT NULL,
-      \`angkatan\` varchar(10) NOT NULL,
-      \`jurusan\` varchar(100) DEFAULT NULL,
-      \`no_hp\` varchar(20) DEFAULT NULL,
-      \`status\` enum('Aktif', 'Alumni', 'Pasif') DEFAULT 'Aktif',
+      \`institusi\` varchar(150) NOT NULL,
+      \`angkatan\` varchar(50) NOT NULL,
+      \`tahun\` varchar(10) NOT NULL,
       \`created_at\` timestamp DEFAULT current_timestamp(),
       PRIMARY KEY (\`id\`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

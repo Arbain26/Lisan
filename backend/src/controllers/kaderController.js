@@ -1,25 +1,18 @@
 const pool = require('../../config/db');
-const { logError } = require('../../src/utils/logger'); // Wait! In controllers, let's verify if logError is in src/utils/logger or utils/logger.
-// Wait! Let's write a safe logError block or check if ../../src/utils/logger exists.
-// Let's use console.error or logError from '../utils/logger' (since prokerController uses logError which was imported).
-// Let's check how logger is imported in prokerController:
-// In prokerController, it does: const { logError } = require('../utils/logger');
-// So from controllers, it's: const { logError } = require('../utils/logger');
-
 const { logError } = require('../utils/logger');
 
-// 1. Get All Kader (with search and angkatan filter)
+// 1. Get All Kader (with search, angkatan, and tahun filter)
 exports.getAllKader = async (req, res) => {
-  const { search, angkatan, status } = req.query;
+  const { search, angkatan, tahun } = req.query;
   
   try {
     let query = 'SELECT * FROM kader WHERE 1=1';
     const params = [];
 
     if (search) {
-      query += ' AND (nama LIKE ? OR nim LIKE ? OR jurusan LIKE ?)';
+      query += ' AND (nama LIKE ? OR institusi LIKE ? OR angkatan LIKE ? OR tahun LIKE ?)';
       const searchWild = `%${search}%`;
-      params.push(searchWild, searchWild, searchWild);
+      params.push(searchWild, searchWild, searchWild, searchWild);
     }
 
     if (angkatan) {
@@ -27,12 +20,12 @@ exports.getAllKader = async (req, res) => {
       params.push(angkatan);
     }
 
-    if (status) {
-      query += ' AND status = ?';
-      params.push(status);
+    if (tahun) {
+      query += ' AND tahun = ?';
+      params.push(tahun);
     }
 
-    query += ' ORDER BY angkatan DESC, nama ASC';
+    query += ' ORDER BY tahun DESC, angkatan ASC, nama ASC';
 
     const [rows] = await pool.query(query, params);
     res.json(rows);
@@ -44,16 +37,16 @@ exports.getAllKader = async (req, res) => {
 
 // 2. Create Kader
 exports.createKader = async (req, res) => {
-  const { nama, nim, angkatan, jurusan, no_hp, status } = req.body;
+  const { nama, institusi, angkatan, tahun } = req.body;
 
-  if (!nama || !angkatan) {
-    return res.status(400).json({ message: 'Nama dan Angkatan wajib diisi' });
+  if (!nama || !institusi || !angkatan || !tahun) {
+    return res.status(400).json({ message: 'Semua kolom (Nama, Institusi, Angkatan, Tahun) wajib diisi' });
   }
 
   try {
     const [result] = await pool.query(
-      'INSERT INTO kader (nama, nim, angkatan, jurusan, no_hp, status) VALUES (?, ?, ?, ?, ?, ?)',
-      [nama, nim || null, angkatan, jurusan || null, no_hp || null, status || 'Aktif']
+      'INSERT INTO kader (nama, institusi, angkatan, tahun) VALUES (?, ?, ?, ?)',
+      [nama, institusi, angkatan, tahun]
     );
 
     const [newKader] = await pool.query('SELECT * FROM kader WHERE id = ?', [result.insertId]);
@@ -71,16 +64,16 @@ exports.createKader = async (req, res) => {
 // 3. Update Kader
 exports.updateKader = async (req, res) => {
   const { id } = req.params;
-  const { nama, nim, angkatan, jurusan, no_hp, status } = req.body;
+  const { nama, institusi, angkatan, tahun } = req.body;
 
-  if (!nama || !angkatan) {
-    return res.status(400).json({ message: 'Nama dan Angkatan wajib diisi' });
+  if (!nama || !institusi || !angkatan || !tahun) {
+    return res.status(400).json({ message: 'Semua kolom (Nama, Institusi, Angkatan, Tahun) wajib diisi' });
   }
 
   try {
     const [result] = await pool.query(
-      'UPDATE kader SET nama = ?, nim = ?, angkatan = ?, jurusan = ?, no_hp = ?, status = ? WHERE id = ?',
-      [nama, nim || null, angkatan, jurusan || null, no_hp || null, status || 'Aktif', id]
+      'UPDATE kader SET nama = ?, institusi = ?, angkatan = ?, tahun = ? WHERE id = ?',
+      [nama, institusi, angkatan, tahun, id]
     );
 
     if (result.affectedRows === 0) {
