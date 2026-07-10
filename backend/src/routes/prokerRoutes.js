@@ -4,6 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { protect } = require('../middleware/authMiddleware');
+const imageUpload = require('../middleware/upload');
 const {
   getTemplate,
   uploadProker,
@@ -52,6 +53,7 @@ const upload = multer({
 });
 
 router.get('/template', getTemplate);
+router.get('/public', getAllProker); // NEW: Public route for Home page
 router.get('/files', protect, getUploadedFiles);
 router.get('/', protect, getAllProker);
 router.get('/dashboard', protect, getProkerDashboard);
@@ -64,7 +66,7 @@ router.post('/upload', protect, (req, res, next) => {
     next();
   });
 }, uploadProker);
-router.put('/:id/schedule/:scheduleId', protect, updateScheduleStatus);
+router.put('/:id/schedule/:scheduleId', protect, imageUpload.single('image'), updateScheduleStatus); // Updated with imageUpload
 router.get('/notifications', protect, getNotifications);
 router.post('/notifications/:id/read', protect, readNotification);
 

@@ -17,7 +17,9 @@ import {
   Clock,
   Check,
   RefreshCw,
-  BellRing
+  BellRing,
+  Image,
+  Camera
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "../../services/api";
@@ -51,6 +53,15 @@ const Proker = () => {
   const [uploadYear, setUploadYear] = useState("2025/2026");
   const [uploadErrors, setUploadErrors] = useState([]);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+
+  // Execution Proof modal states
+  const [isProofModalOpen, setIsProofModalOpen] = useState(false);
+  const [proofProkerId, setProofProkerId] = useState(null);
+  const [proofScheduleId, setProofScheduleId] = useState(null);
+  const [proofNotes, setProofNotes] = useState("");
+  const [proofImage, setProofImage] = useState(null);
+  const [proofImagePreview, setProofImagePreview] = useState(null);
+  const [submittingProof, setSubmittingProof] = useState(false);
 
   const fetchAllData = async () => {
     setLoading(true);
@@ -165,35 +176,51 @@ const Proker = () => {
     }));
   };
 
+  const updateLocalProkerSchedule = (prokerId, scheduleId, status, keterangan, foto_url, responseData) => {
+    setProkers(prev => prev.map(p => {
+      if (p.id === prokerId) {
+        const updatedSchedules = p.schedules.map(s => {
+          if (s.id === scheduleId) {
+            return { ...s, status, keterangan, foto_url };
+          }
+          return s;
+        });
+        return {
+          ...p,
+          progres: responseData.progres,
+          status: responseData.status,
+          indicator: responseData.indicator,
+          schedules: updatedSchedules
+        };
+      }
+      return p;
+    }));
+  };
+
   const handleCycleStatus = async (prokerId, scheduleId, currentStatus) => {
     const statuses = ["Belum Mulai", "Terlaksana", "Tidak Terlaksana"];
     const nextIdx = (statuses.indexOf(currentStatus) + 1) % statuses.length;
     const nextStatus = statuses[nextIdx];
+
+    if (nextStatus === "Terlaksana") {
+      const proker = prokers.find(p => p.id === prokerId);
+      const sched = proker?.schedules.find(s => s.id === scheduleId);
+      
+      setProofProkerId(prokerId);
+      setProofScheduleId(scheduleId);
+      setProofNotes(sched?.keterangan || "");
+      setProofImage(null);
+      setProofImagePreview(sched?.foto_url ? `http://localhost:5000${sched.foto_url}` : null);
+      setIsProofModalOpen(true);
+      return;
+    }
 
     try {
       const response = await api.put(`/proker/${prokerId}/schedule/${scheduleId}`, {
         status: nextStatus
       });
 
-      // Update local state for proker progress, status and schedule item
-      setProkers(prev => prev.map(p => {
-        if (p.id === prokerId) {
-          const updatedSchedules = p.schedules.map(s => {
-            if (s.id === scheduleId) {
-              return { ...s, status: nextStatus };
-            }
-            return s;
-          });
-          return {
-            ...p,
-            progres: response.data.progres,
-            status: response.data.status,
-            indicator: response.data.indicator,
-            schedules: updatedSchedules
-          };
-        }
-        return p;
-      }));
+      updateLocalProkerSchedule(prokerId, scheduleId, nextStatus, null, null, response.data);
 
       // Refresh dashboard & notifications
       const dashRes = await api.get("/proker/dashboard", { params: { tahun: selectedYear } });
@@ -205,6 +232,46 @@ const Proker = () => {
     } catch (error) {
       console.error("Error updating schedule status:", error);
       toast.error("Gagal mengubah status agenda");
+    }
+  };
+
+  const handleProofSubmit = async (e) => {
+    e.preventDefault();
+    setSubmittingProof(true);
+
+    const formData = new FormData();
+    formData.append("status", "Terlaksana");
+    formData.append("keterangan", proofNotes);
+    if (proofImage) {
+      formData.append("image", proofImage);
+    }
+
+    try {
+      const response = await api.put(`/proker/${proofProkerId}/schedule/${proofScheduleId}`, formData);
+
+      const updatedSched = response.data.schedule;
+      updateLocalProkerSchedule(
+        proofProkerId,
+        proofScheduleId,
+        "Terlaksana",
+        updatedSched.keterangan,
+        updatedSched.foto_url,
+        response.data
+      );
+
+      // Refresh dashboard & notifications
+      const dashRes = await api.get("/proker/dashboard", { params: { tahun: selectedYear } });
+      setDashboardData(dashRes.data);
+      const notifRes = await api.get("/proker/notifications");
+      setNotifications(notifRes.data);
+
+      toast.success("Dokumentasi kegiatan berhasil diunggah!");
+      setIsProofModalOpen(false);
+    } catch (error) {
+      console.error("Error uploading proof of execution:", error);
+      toast.error(error.response?.data?.message || "Gagal mengunggah dokumentasi");
+    } finally {
+      setSubmittingProof(false);
     }
   };
 
@@ -647,22 +714,49 @@ const Proker = () => {
                                                   <span className="text-[10px] text-gray-400 font-medium italic mt-2">Tidak ada jadwal</span>
                                                 ) : (
                                                   monthSchedules.map(sched => (
-                                                    <button
+                                                    <div 
                                                       key={sched.id}
-                                                      onClick={() => handleCycleStatus(p.id, sched.id, sched.status)}
-                                                      className={`px-2 py-1.5 rounded-lg text-xs font-bold border transition-all select-none text-left w-full flex items-center justify-between ${
-                                                        sched.status === 'Terlaksana'
-                                                          ? "bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100/70"
-                                                          : sched.status === 'Tidak Terlaksana'
-                                                          ? "bg-rose-50 text-rose-800 border-rose-200 hover:bg-rose-100/70"
-                                                          : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
-                                                      }`}
+                                                      className="relative w-full group/btn"
                                                     >
-                                                      <span className="truncate max-w-[85%]">{sched.tanggal}</span>
-                                                      {sched.status === 'Terlaksana' && <CheckCircle2 size={12} className="text-emerald-600 shrink-0 ml-1" />}
-                                                      {sched.status === 'Tidak Terlaksana' && <XCircle size={12} className="text-rose-600 shrink-0 ml-1" />}
-                                                      {sched.status === 'Belum Mulai' && <Clock size={12} className="text-gray-400 shrink-0 ml-1" />}
-                                                    </button>
+                                                      <button
+                                                        onClick={() => handleCycleStatus(p.id, sched.id, sched.status)}
+                                                        className={`px-2 py-1.5 rounded-lg text-xs font-bold border transition-all select-none text-left w-full flex items-center justify-between pr-8 ${
+                                                          sched.status === 'Terlaksana'
+                                                            ? "bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100/70"
+                                                            : sched.status === 'Tidak Terlaksana'
+                                                            ? "bg-rose-50 text-rose-800 border-rose-200 hover:bg-rose-100/70"
+                                                            : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
+                                                        }`}
+                                                      >
+                                                        <span className="truncate max-w-[80%]" title={sched.tanggal}>{sched.tanggal}</span>
+                                                        <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                                                          {sched.status === 'Terlaksana' && sched.foto_url && (
+                                                            <Image size={10} className="text-emerald-500 shrink-0" />
+                                                          )}
+                                                          {sched.status === 'Terlaksana' && <CheckCircle2 size={12} className="text-emerald-600 shrink-0" />}
+                                                          {sched.status === 'Tidak Terlaksana' && <XCircle size={12} className="text-rose-600 shrink-0" />}
+                                                          {sched.status === 'Belum Mulai' && <Clock size={12} className="text-gray-400 shrink-0" />}
+                                                        </div>
+                                                      </button>
+                                                      
+                                                      {sched.status === 'Terlaksana' && (
+                                                        <button
+                                                          onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setProofProkerId(p.id);
+                                                            setProofScheduleId(sched.id);
+                                                            setProofNotes(sched.keterangan || "");
+                                                            setProofImage(null);
+                                                            setProofImagePreview(sched.foto_url ? `http://localhost:5000${sched.foto_url}` : null);
+                                                            setIsProofModalOpen(true);
+                                                          }}
+                                                          className="absolute right-8 top-1/2 -translate-y-1/2 p-1 text-emerald-600 hover:text-emerald-800 bg-white hover:bg-white border border-emerald-200 rounded-md hidden group-hover/btn:block transition-all shadow-sm z-10"
+                                                          title="Edit Bukti Pelaksanaan"
+                                                        >
+                                                          <Camera size={10} />
+                                                        </button>
+                                                      )}
+                                                    </div>
                                                   ))
                                                 )}
                                               </div>
@@ -1028,6 +1122,138 @@ const Proker = () => {
                         <>
                           <Upload size={16} />
                           Proses & Import
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* MANUAL PROOF OF EXECUTION UPLOAD MODAL */}
+      <AnimatePresence>
+        {isProofModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsProofModalOpen(false)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            />
+            
+            <motion.div
+              initial={{ scale: 0.95, y: 10, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.95, y: 10, opacity: 0 }}
+              className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-lg shadow-2xl relative z-10 border border-gray-100 max-h-[90vh] overflow-y-auto"
+            >
+              <div className="space-y-6">
+                <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                  <h3 className="font-poppins font-extrabold text-xl text-gray-900 flex items-center gap-2">
+                    <Camera className="text-primary" size={22} />
+                    Dokumentasi Kegiatan Terlaksana
+                  </h3>
+                  <button 
+                    onClick={() => setIsProofModalOpen(false)}
+                    className="text-gray-400 hover:text-gray-700 text-sm font-semibold p-1"
+                  >
+                    <XCircle size={20} />
+                  </button>
+                </div>
+
+                <form onSubmit={handleProofSubmit} className="space-y-5">
+                  <div className="space-y-2">
+                    <label className="text-sm font-inter font-bold text-gray-700">Laporan / Keterangan Pelaksanaan</label>
+                    <textarea
+                      value={proofNotes}
+                      onChange={(e) => setProofNotes(e.target.value)}
+                      placeholder="Masukkan catatan pelaksanaan kegiatan (misal: Kegiatan yasinan dihadiri 20 kader dan berjalan khidmat...)"
+                      rows={4}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-inter font-bold text-gray-700">Foto Dokumentasi (Bukti Pelaksanaan)</label>
+                    
+                    {proofImagePreview ? (
+                      <div className="relative rounded-2xl overflow-hidden border border-gray-200 aspect-video group">
+                        <img 
+                          src={proofImagePreview} 
+                          alt="Preview Bukti" 
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setProofImage(null);
+                            setProofImagePreview(null);
+                          }}
+                          className="absolute top-3 right-3 p-1.5 bg-rose-600 text-white rounded-full hover:bg-rose-700 transition-colors shadow-lg"
+                          title="Hapus Foto"
+                        >
+                          <XCircle size={16} />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="border-2 border-dashed border-gray-200 hover:border-primary/50 rounded-2xl p-6 text-center transition-all bg-gray-50 flex flex-col items-center justify-center gap-3 relative cursor-pointer group">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                              setProofImage(file);
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                setProofImagePreview(reader.result);
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                        />
+                        <div className="p-3 bg-white text-gray-400 group-hover:text-primary rounded-2xl shadow-sm border border-gray-100 transition-colors">
+                          <Image size={24} />
+                        </div>
+                        <div>
+                          <p className="font-inter text-xs text-gray-700 font-semibold">
+                            Pilih Foto Dokumentasi
+                          </p>
+                          <p className="text-[10px] text-gray-400 mt-1 font-medium">Hanya format gambar (JPEG, PNG, WEBP, dll.)</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex gap-3 pt-4 border-t border-gray-100">
+                    <button
+                      type="button"
+                      onClick={() => setIsProofModalOpen(false)}
+                      disabled={submittingProof}
+                      className="flex-1 px-4 py-3 rounded-xl font-inter font-semibold text-gray-700 bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors text-sm"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submittingProof}
+                      className="flex-1 px-4 py-3 rounded-xl font-inter font-bold text-white bg-primary hover:bg-red-800 transition-colors flex items-center justify-center gap-2 text-sm shadow-lg shadow-primary/20 disabled:opacity-55 disabled:cursor-not-allowed"
+                    >
+                      {submittingProof ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Menyimpan...
+                        </>
+                      ) : (
+                        <>
+                          <Check size={16} />
+                          Simpan Bukti
                         </>
                       )}
                     </button>

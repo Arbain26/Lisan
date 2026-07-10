@@ -202,6 +202,8 @@ async function run() {
       \`bulan\` varchar(20) NOT NULL,
       \`tanggal\` varchar(50) NOT NULL,
       \`status\` enum('Belum Mulai','Terlaksana','Tidak Terlaksana') DEFAULT 'Belum Mulai',
+      \`keterangan\` text DEFAULT NULL,
+      \`foto_url\` varchar(255) DEFAULT NULL,
       \`updated_at\` timestamp DEFAULT current_timestamp() ON UPDATE current_timestamp(),
       PRIMARY KEY (\`id\`),
       KEY \`proker_id\` (\`proker_id\`),

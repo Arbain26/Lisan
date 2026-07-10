@@ -638,17 +638,38 @@ async function calculateColorAndHealth(proker, schedules) {
 // 4. Update Schedule Event
 exports.updateScheduleStatus = async (req, res) => {
   const { id, scheduleId } = req.params;
-  const { status } = req.body;
+  const { status, keterangan } = req.body;
 
   if (!['Belum Mulai', 'Terlaksana', 'Tidak Terlaksana'].includes(status)) {
     return res.status(400).json({ message: 'Status tidak valid' });
   }
 
   try {
-    const [result] = await pool.query(
-      'UPDATE proker_schedule SET status = ? WHERE id = ? AND proker_id = ?',
-      [status, scheduleId, id]
-    );
+    let foto_url = null;
+    if (req.file) {
+      foto_url = `/uploads/proker/${req.file.filename}`;
+    }
+
+    let query = 'UPDATE proker_schedule SET status = ?';
+    const params = [status];
+
+    if (keterangan !== undefined) {
+      query += ', keterangan = ?';
+      params.push(keterangan);
+    }
+
+    if (foto_url !== null) {
+      query += ', foto_url = ?';
+      params.push(foto_url);
+    } else if (status === 'Belum Mulai' || status === 'Tidak Terlaksana') {
+      // Clear proof if status is reverted
+      query += ', keterangan = NULL, foto_url = NULL';
+    }
+
+    query += ' WHERE id = ? AND proker_id = ?';
+    params.push(scheduleId, id);
+
+    const [result] = await pool.query(query, params);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: 'Agenda tidak ditemukan' });
@@ -662,14 +683,17 @@ exports.updateScheduleStatus = async (req, res) => {
     const [schedules] = await pool.query('SELECT * FROM proker_schedule WHERE proker_id = ?', [id]);
     const evalResult = await calculateColorAndHealth(proker, schedules);
 
+    const [[updatedSched]] = await pool.query('SELECT * FROM proker_schedule WHERE id = ?', [scheduleId]);
+
     res.json({
       message: 'Status agenda berhasil diperbarui',
       progres: proker.progres,
       status: proker.status,
-      indicator: evalResult.indicator
+      indicator: evalResult.indicator,
+      schedule: updatedSched
     });
   } catch (error) {
-    console.error('Error updating schedule status:', error);
+    logError('updateScheduleStatus', error);
     res.status(500).json({ message: 'Server Error' });
   }
 };
