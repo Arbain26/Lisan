@@ -48,6 +48,7 @@ const sidebarGroups = [
     title: "Interaksi & Anggota",
     links: [
       { icon: Users, label: "Data Relawan", path: "/admin/relawan" },
+      { icon: Users, label: "Daftar Kader", path: "/admin/kader" },
       { icon: Users, label: "Struktur & Divisi", path: "/admin/struktur" },
       { icon: MessageSquare, label: "Pesan Kontak", path: "/admin/pesan" },
     ]

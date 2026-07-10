@@ -34,6 +34,7 @@ import Galeri from "./pages/admin/Galeri";
 import Donor from "./pages/admin/Donor";
 import Relawan from "./pages/admin/Relawan";
 import Pesan from "./pages/admin/Pesan";
+import Kader from "./pages/admin/Kader";
 import Pengaturan from "./pages/admin/Pengaturan";
 import HeroSlides from "./pages/admin/HeroSlides";
 import Struktur from "./pages/admin/Struktur";
@@ -98,6 +99,7 @@ function App() {
               <Route path="donor" element={<PageTransition><Donor /></PageTransition>} />
               <Route path="relawan" element={<PageTransition><Relawan /></PageTransition>} />
               <Route path="pesan" element={<PageTransition><Pesan /></PageTransition>} />
+              <Route path="kader" element={<PageTransition><Kader /></PageTransition>} />
               <Route path="struktur" element={<PageTransition><Struktur /></PageTransition>} />
               <Route path="pengaturan" element={<PageTransition><Pengaturan /></PageTransition>} />
             </Route>
