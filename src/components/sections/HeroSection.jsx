@@ -115,28 +115,46 @@ const HeroSection = () => {
             </p>
 
             {/* Buttons */}
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-4 pt-2">
               <a
                 href="#about"
                 onClick={(e) => { e.preventDefault(); scrollDown(); }}
-                className="flex items-center gap-2.5 px-7 py-4 rounded-xl font-poppins font-semibold text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
-                style={{ background: "linear-gradient(135deg, #B91C1C, #991818)", boxShadow: "0 8px 30px rgba(185,28,28,0.4)" }}
+                className="flex items-center gap-2.5 px-8 py-4 rounded-xl font-poppins font-semibold text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl cursor-pointer"
+                style={{ 
+                  background: "linear-gradient(135deg, #B91C1C 0%, #991818 100%)", 
+                  boxShadow: "0 10px 30px -5px rgba(185, 28, 28, 0.5)" 
+                }}
               >
-                Explore More
+                Jelajahi Gerakan
                 <ArrowRight size={18} />
               </a>
+
+              <Link
+                to="/join"
+                className="flex items-center gap-2.5 px-8 py-4 rounded-xl font-poppins font-semibold text-white backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:bg-white/20"
+                style={{
+                  background: "rgba(255, 255, 255, 0.12)",
+                  border: "1px solid rgba(255, 255, 255, 0.25)",
+                  boxShadow: "0 8px 25px rgba(0,0,0,0.2)"
+                }}
+              >
+                Daftar Relawan
+              </Link>
             </div>
           </motion.div>
         </AnimatePresence>
 
         {/* Slide Dots */}
-        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 flex gap-2">
+        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 flex items-center gap-2.5 z-20">
           {slides.map((_, i) => (
             <button
               key={i}
+              type="button"
+              aria-label={`Buka slide banner nomor ${i + 1}`}
               onClick={() => setCurrent(i)}
-              className={`h-1.5 rounded-full transition-all duration-300 ${i === current ? "w-8 bg-secondary" : "w-2 bg-white/40"
-                }`}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                i === current ? "w-9 bg-[#F59E0B] shadow-lg shadow-amber-500/50" : "w-2.5 bg-white/40 hover:bg-white/70"
+              }`}
             />
           ))}
         </div>

@@ -50,10 +50,10 @@ import DepartemenPage from './public/DepartemenPage';
 import KorwilPage from './public/KorwilPage';
 import StructurePage from './public/StructurePage';
 import ContactPage from './public/ContactPage';
-
-export const AboutPage = () => <ComingSoon badge="Profil Organisasi" title="Tentang LISAN" subtitle="Mengenal lebih jauh sejarah, visi, dan misi LISAN" />;
+import AboutPage from './public/AboutPage';
 
 export { 
+  AboutPage,
   GalleryPage, NewsPage, NewsDetailPage, ProgramsPage, DonorPage,
   SejarahPage, VisiMisiPage, NilaiOrganisasiPage, DepartemenPage, KorwilPage,
   StructurePage, ContactPage

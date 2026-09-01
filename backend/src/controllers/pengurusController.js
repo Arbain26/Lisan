@@ -33,7 +33,7 @@ exports.getPengurusById = async (req, res) => {
 
 exports.createPengurus = async (req, res) => {
   try {
-    const { nama, jabatan, departemen_id, urutan } = req.body;
+    const { nama, jabatan, departemen_id, urutan, bio, email, instagram, linkedin, kampus } = req.body;
 
     if (!nama || !jabatan) {
       return res.status(400).json({ message: 'Nama dan jabatan wajib diisi' });
@@ -49,8 +49,8 @@ exports.createPengurus = async (req, res) => {
     const orderIndex = urutan ? parseInt(urutan, 10) : 0;
 
     const [result] = await pool.query(
-      'INSERT INTO pengurus (nama, jabatan, departemen_id, foto_url, urutan) VALUES (?, ?, ?, ?, ?)',
-      [nama, jabatan, deptId, foto_url, orderIndex]
+      'INSERT INTO pengurus (nama, jabatan, departemen_id, foto_url, urutan, bio, email, instagram, linkedin, kampus) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [nama, jabatan, deptId, foto_url, orderIndex, bio || null, email || null, instagram || null, linkedin || null, kampus || null]
     );
 
     res.status(201).json({ id: result.insertId, message: 'Pengurus berhasil ditambahkan' });
@@ -63,7 +63,7 @@ exports.createPengurus = async (req, res) => {
 exports.updatePengurus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { nama, jabatan, departemen_id, urutan } = req.body;
+    const { nama, jabatan, departemen_id, urutan, bio, email, instagram, linkedin, kampus } = req.body;
 
     if (!nama || !jabatan) {
       return res.status(400).json({ message: 'Nama dan jabatan wajib diisi' });
@@ -73,8 +73,8 @@ exports.updatePengurus = async (req, res) => {
     const deptId = (!departemen_id || departemen_id === 'null' || departemen_id === '') ? null : parseInt(departemen_id, 10);
     const orderIndex = urutan ? parseInt(urutan, 10) : 0;
 
-    let query = 'UPDATE pengurus SET nama = ?, jabatan = ?, departemen_id = ?, urutan = ?';
-    const params = [nama, jabatan, deptId, orderIndex];
+    let query = 'UPDATE pengurus SET nama = ?, jabatan = ?, departemen_id = ?, urutan = ?, bio = ?, email = ?, instagram = ?, linkedin = ?, kampus = ?';
+    const params = [nama, jabatan, deptId, orderIndex, bio || null, email || null, instagram || null, linkedin || null, kampus || null];
 
     if (req.file) {
       const foto_url = `/uploads/pengurus/${req.file.filename}`;

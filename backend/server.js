@@ -30,6 +30,7 @@ const pengurusRoutes = require('./src/routes/pengurusRoutes');
 const settingsRoutes = require('./src/routes/settingsRoutes');
 const messageRoutes = require('./src/routes/messageRoutes');
 const kaderRoutes = require('./src/routes/kaderRoutes');
+const korwilRoutes = require('./src/routes/korwilRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/news', newsRoutes);
@@ -45,11 +46,16 @@ app.use('/api/pengurus', pengurusRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/pesan', messageRoutes);
 app.use('/api/kader', kaderRoutes);
+app.use('/api/korwil', korwilRoutes);
 
 // Basic route
 app.get('/', (req, res) => {
   res.send('LISAN API is running...');
 });
+
+// Centralized Error Handler
+const errorHandler = require('./src/middleware/errorHandler');
+app.use(errorHandler);
 
 // Port
 const PORT = process.env.PORT || 5000;

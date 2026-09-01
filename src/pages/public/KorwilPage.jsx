@@ -1,52 +1,27 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Map, MapPin, Users, ArrowRight } from "lucide-react";
-
-const PageHeader = ({ title, subtitle, badge }) => (
-  <div
-    className="relative py-32 flex items-center justify-center overflow-hidden"
-    style={{ background: "linear-gradient(135deg, #111827 0%, #1a0505 50%, #111827 100%)" }}
-  >
-    <div className="absolute inset-0 opacity-5" style={{ backgroundImage: "radial-gradient(circle at 2px 2px, rgba(245,158,11,0.5) 1px, transparent 0)", backgroundSize: "32px 32px" }} />
-    <div className="relative z-10 text-center max-w-3xl mx-auto px-4">
-      {badge && (
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-5" style={{ background: "rgba(245,158,11,0.15)", border: "1px solid rgba(245,158,11,0.3)" }}>
-          <span className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
-          <span className="text-secondary text-xs font-inter font-semibold uppercase tracking-widest">{badge}</span>
-        </div>
-      )}
-      <h1 className="font-poppins font-bold text-4xl sm:text-6xl text-white mb-4">{title}</h1>
-      {subtitle && <p className="text-gray-400 font-inter text-lg">{subtitle}</p>}
-    </div>
-  </div>
-);
+import { Map, MapPin, Users, ArrowRight, Loader2 } from "lucide-react";
+import PageHeader from "../../components/ui/PageHeader";
+import api from "../../services/api";
 
 const KorwilPage = () => {
-  const regions = [
-    {
-      id: 1,
-      name: "Koordinator Wilayah Pangkajene",
-      kampus: "Mewadahi mahasiswa dari kampus-kampus di area Pangkajene dan sekitarnya.",
-      anggota: "120+ Kader Aktif"
-    },
-    {
-      id: 2,
-      name: "Koordinator Wilayah Rappang",
-      kampus: "Basis pergerakan utama untuk institusi pendidikan tinggi di wilayah utara Sidrap.",
-      anggota: "85+ Kader Aktif"
-    },
-    {
-      id: 3,
-      name: "Koordinator Wilayah Makassar",
-      kampus: "Wadah silaturahmi dan pembinaan bagi mahasiswa asal Sidrap yang menempuh pendidikan di Kota Makassar.",
-      anggota: "200+ Kader Aktif"
-    },
-    {
-      id: 4,
-      name: "Koordinator Wilayah Parepare",
-      kampus: "Mengoordinasikan kegiatan dan kajian bagi kader LISAN yang tersebar di wilayah Parepare.",
-      anggota: "90+ Kader Aktif"
-    }
-  ];
+  const [regions, setRegions] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchKorwil = async () => {
+      try {
+        const response = await api.get("/korwil");
+        setRegions(response.data);
+      } catch (err) {
+        console.error("Gagal memuat koordinator wilayah:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchKorwil();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -67,40 +42,47 @@ const KorwilPage = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {regions.map((region, i) => (
-            <motion.div
-              key={region.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-xl transition-all duration-300 hover:border-red-100"
-            >
-              <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-                <MapPin size={80} className="text-primary" />
-              </div>
-              
-              <div className="flex items-start gap-4 mb-6 relative z-10">
-                <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center text-primary border border-gray-100 group-hover:bg-red-50 transition-colors">
-                  <MapPin size={24} />
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-16 gap-3">
+            <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            <p className="text-gray-400 font-inter text-sm">Memuat basis wilayah...</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {regions.map((region, i) => (
+              <motion.div
+                key={region.id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-xl transition-all duration-300 hover:border-red-100"
+              >
+                <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+                  <MapPin size={80} className="text-primary" />
                 </div>
-                <div>
-                  <h3 className="text-xl font-poppins font-bold text-dark">{region.name}</h3>
+                
+                <div className="flex items-start gap-4 mb-6 relative z-10">
+                  <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center text-primary border border-gray-100 group-hover:bg-red-50 transition-colors">
+                    <MapPin size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-poppins font-bold text-dark">{region.name}</h3>
+                  </div>
                 </div>
-              </div>
-              
-              <p className="font-inter text-gray-600 mb-6 relative z-10 leading-relaxed">
-                {region.kampus}
-              </p>
-              
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-lg border border-gray-100 font-inter text-sm text-gray-700 relative z-10 group-hover:bg-white group-hover:border-red-100 transition-colors">
-                <Users size={16} className="text-secondary" />
-                {region.anggota}
-              </div>
-            </motion.div>
-          ))}
-        </div>
+                
+                <p className="font-inter text-gray-600 mb-6 relative z-10 leading-relaxed">
+                  {region.kampus}
+                </p>
+                
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-lg border border-gray-100 font-inter text-sm text-gray-700 relative z-10 group-hover:bg-white group-hover:border-red-100 transition-colors">
+                  <Users size={16} className="text-secondary" />
+                  {region.anggota}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
 
         <motion.div
           initial={{ opacity: 0 }}

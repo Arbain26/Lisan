@@ -38,6 +38,8 @@ import Kader from "./pages/admin/Kader";
 import Pengaturan from "./pages/admin/Pengaturan";
 import HeroSlides from "./pages/admin/HeroSlides";
 import Struktur from "./pages/admin/Struktur";
+import Profil from "./pages/admin/Profil";
+import KorwilAdmin from "./pages/admin/Korwil";
 
 // Providers
 import { ToastProvider } from "./components/ui/ToastProvider";
@@ -101,6 +103,8 @@ function App() {
               <Route path="pesan" element={<PageTransition><Pesan /></PageTransition>} />
               <Route path="kader" element={<PageTransition><Kader /></PageTransition>} />
               <Route path="struktur" element={<PageTransition><Struktur /></PageTransition>} />
+              <Route path="profil" element={<PageTransition><Profil /></PageTransition>} />
+              <Route path="korwil" element={<PageTransition><KorwilAdmin /></PageTransition>} />
               <Route path="pengaturan" element={<PageTransition><Pengaturan /></PageTransition>} />
             </Route>
             
