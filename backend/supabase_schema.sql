@@ -267,7 +267,7 @@ CREATE INDEX IF NOT EXISTS idx_korwil_active ON korwil(is_active);
 
 -- Admin Default (admin@lisan.id / password: password123)
 INSERT INTO users (name, email, password, role)
-SELECT 'Admin Utama', 'admin@lisan.id', '$2b$10$Hj5Col471JDvmKenecRdW.WgXChZRoRP9ZvnKZd5aMj638m5GF5C.', 'Admin'
+SELECT 'Admin Utama', 'admin@lisan.id', '$2b$10$y8dboD11ijbI0IEcehbo8OX2NkYgdHqNUmwUCmBSiRZpky.FhROl2', 'Admin'
 WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'admin@lisan.id');
 
 -- Hero Slides Default
