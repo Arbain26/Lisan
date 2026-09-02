@@ -243,7 +243,7 @@ const Relawan = () => {
                       <td className="px-6 py-4 text-sm font-inter">
                         {item.no_hp ? (
                           <a
-                            href={`https://wa.me/${formatWaNumber(item.no_hp)}?text=${encodeURIComponent('Assalamualaikum warahmatullahi wabarakatuh kak, Maukigha mendonor kak?')}`}
+                            href={`https://wa.me/${formatWaNumber(item.no_hp)}?text=${encodeURIComponent("Assalamu'alaikum warahmatullahi wabarakatuh, kami dari lingkar donor darah sidrap, dapat informasi bahwa butuhki darah kak")}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1.5 text-emerald-600 hover:text-emerald-700 hover:underline font-medium"
