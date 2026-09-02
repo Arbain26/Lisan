@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("lisan_admin_token");
     localStorage.removeItem("lisan_admin_user");
     setUser(null);
-    navigate("/login", { replace: true });
+    navigate("/admin", { replace: true });
   };
 
   const value = {

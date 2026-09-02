@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, AlertCircle, ArrowLeft } from "lucide-react";
@@ -12,11 +12,20 @@ const Login = () => {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { login } = useAuth();
+  const { user, login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = location.state?.from?.pathname || "/admin/dashboard";
+  useEffect(() => {
+    if (user) {
+      navigate("/admin/dashboard", { replace: true });
+    }
+  }, [user, navigate]);
+
+  const targetFrom = location.state?.from?.pathname;
+  const from = (targetFrom && targetFrom !== "/admin" && targetFrom !== "/login" && targetFrom !== "/admin/login")
+    ? targetFrom
+    : "/admin/dashboard";
 
   const handleSubmit = async (e) => {
     e.preventDefault();

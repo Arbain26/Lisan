@@ -5,7 +5,6 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Layout from "./components/layout/Layout";
 import AdminLayout from "./components/layout/AdminLayout";
 import Home from "./pages/Home";
-import Login from "./pages/auth/Login";
 
 import {
   AboutPage,
@@ -85,8 +84,9 @@ function App() {
               <Route path="/join" element={<PageTransition><JoinPage /></PageTransition>} />
             </Route>
 
-            {/* Auth Route */}
-            <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
+            {/* Auth Routes - Redirected to /admin */}
+            <Route path="/login" element={<Navigate to="/admin" replace />} />
+            <Route path="/admin/login" element={<Navigate to="/admin" replace />} />
 
             {/* Protected Admin Routes */}
             <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>

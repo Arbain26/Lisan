@@ -468,24 +468,13 @@ const Navbar = () => {
               ))}
             </nav>
 
-            {/* Right: Actions & Mobile Toggle */}
-            <div className="flex items-center gap-3">
-              <Link
-                to="/login"
-                className={`hidden lg:flex items-center justify-center px-5 py-2 rounded-full font-poppins font-semibold text-sm transition-all duration-300 border ${scrolled
-                    ? "border-primary text-primary hover:bg-primary hover:text-white"
-                    : "border-white/40 text-white hover:bg-white hover:text-primary"
-                  }`}
-              >
-                Login Admin
-              </Link>
-
-              {/* Mobile hamburger */}
+            {/* Mobile Toggle */}
+            <div className="flex lg:hidden items-center">
               <button
                 onClick={() => setMobileOpen(!mobileOpen)}
                 aria-label={mobileOpen ? "Close menu" : "Open menu"}
                 aria-expanded={mobileOpen}
-                className={`lg:hidden flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 ${scrolled
+                className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 ${scrolled
                   ? "text-gray-700 hover:bg-gray-100"
                   : "text-white hover:bg-white/15"
                   }`}
@@ -503,6 +492,7 @@ const Navbar = () => {
                 </AnimatePresence>
               </button>
             </div>
+
 
           </div>
         </div>
@@ -590,13 +580,6 @@ const Navbar = () => {
 
             {/* Drawer Footer */}
             <div className="px-5 py-4 border-t border-gray-100 flex flex-col gap-3" style={{ background: "#fafafa" }}>
-              <Link
-                to="/login"
-                onClick={() => setMobileOpen(false)}
-                className="w-full py-2.5 flex items-center justify-center rounded-xl font-poppins font-medium text-sm border border-primary text-primary hover:bg-primary hover:text-white transition-colors"
-              >
-                Login Admin
-              </Link>
               <p className="text-center text-xs text-gray-400 font-inter leading-relaxed">
                 Bersama LISAN, jadilah bagian dari perubahan.
               </p>
