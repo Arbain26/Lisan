@@ -48,6 +48,28 @@ app.use('/api/pesan', messageRoutes);
 app.use('/api/kader', kaderRoutes);
 app.use('/api/korwil', korwilRoutes);
 
+// Health and Diagnostic Route
+app.get('/api/health', async (req, res) => {
+  const pool = require('./config/db');
+  const hasDbUrl = Boolean(process.env.DATABASE_URL || process.env.SUPABASE_DB_URL);
+  let dbStatus = 'disconnected';
+  let dbError = null;
+  try {
+    const [result] = await pool.query('SELECT 1 as test');
+    dbStatus = 'connected';
+  } catch (err) {
+    dbError = err.message;
+  }
+
+  res.json({
+    status: 'ok',
+    isSupabase: pool.isSupabase,
+    hasDatabaseUrl: hasDbUrl,
+    dbStatus,
+    dbError
+  });
+});
+
 // Basic route
 app.get('/', (req, res) => {
   res.send('LISAN API is running...');
