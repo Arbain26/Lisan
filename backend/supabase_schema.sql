@@ -286,48 +286,48 @@ WHERE (SELECT COUNT(*) FROM hero_slides) = 2;
 -- Departemen Default
 INSERT INTO departemen (nama, icon, color_theme, deskripsi, program_unggulan)
 SELECT 
-    'Departemen Kaderisasi',
-    'Users',
-    'bg-emerald-50 text-emerald-600',
-    'Merancang dan melaksanakan alur pembinaan anggota, mulai dari rekrutmen hingga pelatihan kepemimpinan tingkat lanjut. Ujung tombak penjaga kualitas sumber daya manusia LISAN.',
-    '["Latihan Kepemimpinan Dasar", "Upgrading Pengurus", "Mentoring Rutin"]'
-WHERE NOT EXISTS (SELECT 1 FROM departemen WHERE nama = 'Departemen Kaderisasi');
+    'Keperempuanan',
+    'Award',
+    'bg-rose-50 text-rose-600 border-rose-100',
+    'Wadah pemberdayaan, penguatan kapasitas, advokasi, serta pengembangan potensi kader mahasiswi Islam dalam ranah sosial dan keorganisasian.',
+    '["Kajian Isu Keperempuanan", "Sekolah Pemberdayaan Perempuan", "Bina Karakter Muslimah Tangguh"]'
+WHERE NOT EXISTS (SELECT 1 FROM departemen WHERE nama = 'Keperempuanan');
 
 INSERT INTO departemen (nama, icon, color_theme, deskripsi, program_unggulan)
 SELECT 
-    'Departemen Kajian & Keilmuan',
-    'BookOpen',
-    'bg-blue-50 text-blue-600',
-    'Mewadahi diskusi intelektual, literasi, dan riset strategis. Bertanggung jawab memberikan pencerahan akademik dan spiritual bagi seluruh anggota LISAN.',
-    '["Diskusi Publik", "Bedah Buku", "Kajian Keislaman Kontemporer"]'
-WHERE NOT EXISTS (SELECT 1 FROM departemen WHERE nama = 'Departemen Kajian & Keilmuan');
-
-INSERT INTO departemen (nama, icon, color_theme, deskripsi, program_unggulan)
-SELECT 
-    'Departemen Sosial Masyarakat',
-    'HeartHandshake',
-    'bg-red-50 text-red-600',
-    'Jembatan penghubung antara LISAN dan masyarakat luas. Mengelola berbagai kegiatan kemanusiaan dan tanggap bencana di wilayah Sidenreng Rappang.',
-    '["Lingkar Donor Darah", "Bakti Sosial", "LISAN Tanggap Bencana"]'
-WHERE NOT EXISTS (SELECT 1 FROM departemen WHERE nama = 'Departemen Sosial Masyarakat');
-
-INSERT INTO departemen (nama, icon, color_theme, deskripsi, program_unggulan)
-SELECT 
-    'Departemen Media & Komunikasi',
+    'Media Informasi dan Komunikasi',
     'Megaphone',
-    'bg-amber-50 text-amber-600',
-    'Mengelola arus informasi, publikasi kegiatan, dan membangun citra positif organisasi melalui berbagai platform media sosial dan website.',
-    '["Pelatihan Jurnalistik", "Manajemen Konten Digital", "Press Release"]'
-WHERE NOT EXISTS (SELECT 1 FROM departemen WHERE nama = 'Departemen Media & Komunikasi');
+    'bg-amber-50 text-amber-600 border-amber-100',
+    'Mengelola arus informasi, publikasi kegiatan, produksi konten kreatif, dan membangun citra positif organisasi melalui platform digital dan jejaring komunikasi.',
+    '["Manajemen Media Digital & Website", "Pelatihan Jurnalistik & Desain Grafis", "Produksi Konten Edukasi & Syiar"]'
+WHERE NOT EXISTS (SELECT 1 FROM departemen WHERE nama = 'Media Informasi dan Komunikasi');
 
 INSERT INTO departemen (nama, icon, color_theme, deskripsi, program_unggulan)
 SELECT 
-    'Departemen Kewirausahaan',
-    'Laptop',
-    'bg-purple-50 text-purple-600',
-    'Membangun kemandirian finansial organisasi sekaligus melatih jiwa wirausaha para anggota melalui berbagai unit usaha kreatif.',
-    '["LISAN Merchandise", "Pelatihan Bisnis Digital", "Bazaar Mahasiswa"]'
-WHERE NOT EXISTS (SELECT 1 FROM departemen WHERE nama = 'Departemen Kewirausahaan');
+    'Lingkar Donor Darah Sidrap',
+    'HeartHandshake',
+    'bg-red-50 text-red-600 border-red-100',
+    'Pusat koordinasi aksi kemanusiaan donor darah, penyediaan basis data pendonor sukarela, serta respons cepat tanggap darurat kebutuhan darah bagi masyarakat Sidenreng Rappang.',
+    '["Aksi Donor Darah Rutin", "Layanan Darurat Kebutuhan Darah", "Perekrutan & Database Relawan Donor"]'
+WHERE NOT EXISTS (SELECT 1 FROM departemen WHERE nama = 'Lingkar Donor Darah Sidrap');
+
+INSERT INTO departemen (nama, icon, color_theme, deskripsi, program_unggulan)
+SELECT 
+    'Pengkaderan',
+    'Users',
+    'bg-emerald-50 text-emerald-600 border-emerald-100',
+    'Merancang dan mengawal alur pembinaan anggota, mulai dari proses rekrutmen hingga pelatihan kepemimpinan kader sebagai jantung regenerasi organisasi LISAN.',
+    '["Latihan Kader & Kepemimpinan", "Upgrading Kapasitas Pengurus", "Mentoring & Pendampingan Kader Baru"]'
+WHERE NOT EXISTS (SELECT 1 FROM departemen WHERE nama = 'Pengkaderan');
+
+INSERT INTO departemen (nama, icon, color_theme, deskripsi, program_unggulan)
+SELECT 
+    'Advokasi dan Pengorganisasian Sosial',
+    'Shield',
+    'bg-blue-50 text-blue-600 border-blue-100',
+    'Mewadahi pendampingan aspirasi, pembelaan hak-hak masyarakat, analisis kebijakan publik, serta pengorganisasian gerakan kepedulian sosial kemasyarakatan.',
+    '["Advokasi Kebijakan Publik & Sosial", "Kajian Kritis & Riset Kebijakan", "Pengorganisasian Gerakan Komunitas"]'
+WHERE NOT EXISTS (SELECT 1 FROM departemen WHERE nama = 'Advokasi dan Pengorganisasian Sosial');
 
 -- Pengaturan Awal Default
 INSERT INTO pengaturan (
