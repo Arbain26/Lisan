@@ -7,6 +7,17 @@ import EmptyState from "../../components/ui/EmptyState";
 import * as XLSX from 'xlsx';
 import api from "../../services/api";
 
+const formatWaNumber = (phone) => {
+  if (!phone) return "";
+  let clean = phone.toString().replace(/\D/g, "");
+  if (clean.startsWith("0")) {
+    clean = "62" + clean.slice(1);
+  } else if (!clean.startsWith("62") && clean.length >= 8) {
+    clean = "62" + clean;
+  }
+  return clean;
+};
+
 const Relawan = () => {
   const { data, loading, isSubmitting, addItem, updateItem, deleteItem } = useCRUD("/relawan");
 
@@ -230,13 +241,20 @@ const Relawan = () => {
                       <td className="px-6 py-4 text-sm font-inter text-gray-600">{item.daerah}</td>
                       <td className="px-6 py-4 text-sm font-inter text-gray-600">{item.golongan_darah}</td>
                       <td className="px-6 py-4 text-sm font-inter">
-                        <a
-                          href={`https://web.whatsapp.com/send?phone=${item.no_hp.startsWith('0') ? '62' + item.no_hp.slice(1) : item.no_hp}&text=${encodeURIComponent(`Assalamualaikum warahmatullahi wabarakatuh kak, Maukigha mendonor kak?`)}`}
-                          target="whatsapp_web"
-                          className="text-emerald-600 hover:text-emerald-700 hover:underline font-medium"
-                        >
-                          {item.no_hp || "-"}
-                        </a>
+                        {item.no_hp ? (
+                          <a
+                            href={`https://wa.me/${formatWaNumber(item.no_hp)}?text=${encodeURIComponent('Assalamualaikum warahmatullahi wabarakatuh kak, Maukigha mendonor kak?')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-emerald-600 hover:text-emerald-700 hover:underline font-medium"
+                            title="Buka Chat WhatsApp"
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                            {item.no_hp}
+                          </a>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-sm font-inter text-gray-600">{item.keterangan || "-"}</td>
                       <td className="px-6 py-4 text-right">
