@@ -78,71 +78,77 @@ const HeroSection = () => {
 
       {/* Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
-        <AnimatePresence mode="wait">
+        <div className="max-w-3xl">
+          {/* Badge */}
           <motion.div
-            key={current}
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="max-w-3xl"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 text-xs font-inter font-semibold uppercase tracking-widest"
+            style={{ background: "rgba(245,158,11,0.15)", border: "1px solid rgba(245,158,11,0.4)", color: "#F59E0B" }}
           >
-            {/* Badge */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 text-xs font-inter font-semibold uppercase tracking-widest"
-              style={{ background: "rgba(245,158,11,0.15)", border: "1px solid rgba(245,158,11,0.4)", color: "#F59E0B" }}
-            >
-              <span className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
-              Organisasi Mahasiswa Islam
-            </motion.div>
-
-            {/* Title */}
-            <h1 className="font-poppins font-bold text-5xl sm:text-6xl lg:text-7xl text-white leading-tight mb-4 text-shadow">
-              {slides[current].title}{" "}
-              <span
-                className="block"
-                style={{ background: "linear-gradient(135deg, #F59E0B, #fcd34d)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}
-              >
-                {slides[current].highlight}
-              </span>
-            </h1>
-
-            <p className="font-inter text-gray-300 text-lg sm:text-xl leading-relaxed mb-10 max-w-2xl">
-              {slides[current].sub}
-            </p>
-
-            {/* Buttons */}
-            <div className="flex flex-wrap gap-4 pt-2">
-              <a
-                href="#about"
-                onClick={(e) => { e.preventDefault(); scrollDown(); }}
-                className="flex items-center gap-2.5 px-8 py-4 rounded-xl font-poppins font-semibold text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl cursor-pointer"
-                style={{ 
-                  background: "linear-gradient(135deg, #B91C1C 0%, #991818 100%)", 
-                  boxShadow: "0 10px 30px -5px rgba(185, 28, 28, 0.5)" 
-                }}
-              >
-                Jelajahi Gerakan
-                <ArrowRight size={18} />
-              </a>
-
-              <Link
-                to="/join"
-                className="flex items-center gap-2.5 px-8 py-4 rounded-xl font-poppins font-semibold text-white backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:bg-white/20"
-                style={{
-                  background: "rgba(255, 255, 255, 0.12)",
-                  border: "1px solid rgba(255, 255, 255, 0.25)",
-                  boxShadow: "0 8px 25px rgba(0,0,0,0.2)"
-                }}
-              >
-                Daftar Relawan
-              </Link>
-            </div>
+            <span className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
+            Organisasi Mahasiswa Islam
           </motion.div>
-        </AnimatePresence>
+
+          {/* Title */}
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="font-poppins font-bold text-5xl sm:text-6xl lg:text-7xl text-white leading-tight mb-4 text-shadow"
+          >
+            Pemimpin Masa Depan{" "}
+            <span
+              className="block"
+              style={{ background: "linear-gradient(135deg, #F59E0B, #fcd34d)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}
+            >
+              Lahir di Sini
+            </span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="font-inter text-gray-300 text-lg sm:text-xl leading-relaxed mb-10 max-w-2xl"
+          >
+            Bergabunglah dengan mahasiswa berdedikasi yang membentuk perubahan nyata di masyarakat.
+          </motion.p>
+
+          {/* Buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.5 }}
+            className="flex flex-wrap gap-4 pt-2"
+          >
+            <a
+              href="#about"
+              onClick={(e) => { e.preventDefault(); scrollDown(); }}
+              className="flex items-center gap-2.5 px-8 py-4 rounded-xl font-poppins font-semibold text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl cursor-pointer"
+              style={{ 
+                background: "linear-gradient(135deg, #B91C1C 0%, #991818 100%)", 
+                boxShadow: "0 10px 30px -5px rgba(185, 28, 28, 0.5)" 
+              }}
+            >
+              Jelajahi Gerakan
+              <ArrowRight size={18} />
+            </a>
+
+            <Link
+              to="/join"
+              className="flex items-center gap-2.5 px-8 py-4 rounded-xl font-poppins font-semibold text-white backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:bg-white/20"
+              style={{
+                background: "rgba(255, 255, 255, 0.12)",
+                border: "1px solid rgba(255, 255, 255, 0.25)",
+                boxShadow: "0 8px 25px rgba(0,0,0,0.2)"
+              }}
+            >
+              Daftar Relawan
+            </Link>
+          </motion.div>
+        </div>
 
         {/* Slide Dots */}
         <div className="absolute bottom-16 left-1/2 -translate-x-1/2 flex items-center gap-2.5 z-20">
