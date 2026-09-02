@@ -272,11 +272,11 @@ WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'admin@lisan.id');
 
 -- Hero Slides Default
 INSERT INTO hero_slides (image_url, title, highlight, sub)
-SELECT 'https://images.unsplash.com/photo-1529119368496-2dfda6ec2804?w=1920&q=85', 'Pemimpin Masa Depan', 'Lahir di Sini', 'Bergabunglah dengan mahasiswa berdedikasi yang membentuk perubahan nyata di masyarakat.'
+SELECT 'https://images.unsplash.com/photo-1529119368496-2dfda6ec2804?w=1920&q=85', 'Lingkar Mahasiswa Islam', 'untuk Perubahan', 'Membangun generasi intelektual, progresif, dan Islami untuk masa depan Indonesia yang lebih baik.'
 WHERE NOT EXISTS (SELECT 1 FROM hero_slides);
 
 INSERT INTO hero_slides (image_url, title, highlight, sub)
-SELECT 'https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=1920&q=85', 'Pemimpin Masa Depan', 'Lahir di Sini', 'Bergabunglah dengan mahasiswa berdedikasi yang membentuk perubahan nyata di masyarakat.'
+SELECT 'https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=1920&q=85', 'Bergerak Bersama,', 'Membawa Perubahan', 'Organisasi mahasiswa Islam yang berdedikasi untuk kemajuan sosial, intelektual, dan spiritual.'
 WHERE (SELECT COUNT(*) FROM hero_slides) = 1;
 
 INSERT INTO hero_slides (image_url, title, highlight, sub)
