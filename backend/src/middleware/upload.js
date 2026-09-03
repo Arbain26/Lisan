@@ -1,54 +1,24 @@
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    let folder = 'uploads/';
-    
-    // Determine folder based on route path
-    if (req.baseUrl.includes('news') || req.baseUrl.includes('articles')) {
-      folder += 'news/';
-    } else if (req.baseUrl.includes('gallery')) {
-      folder += 'gallery/';
-    } else if (req.baseUrl.includes('programs')) {
-      folder += 'programs/';
-    } else if (req.baseUrl.includes('pengurus')) {
-      folder += 'pengurus/';
-    } else if (req.baseUrl.includes('hero')) {
-      folder += 'hero/';
-    } else if (req.baseUrl.includes('proker')) {
-      folder += 'proker/';
-    } else {
-      folder += 'misc/';
-    }
-
-    const fullPath = path.join(__dirname, '..', '..', folder);
-    
-    // Create folder if it doesn't exist
-    if (!fs.existsSync(fullPath)) {
-      fs.mkdirSync(fullPath, { recursive: true });
-    }
-    
-    cb(null, fullPath);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
+// Use memory storage for serverless / Vercel compatibility
+const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith('image/')) {
+  const allowedExtensions = /\.(jpg|jpeg|png|webp|gif|svg)$/i;
+  const isImageMime = file.mimetype.startsWith('image/');
+  const isAllowedExt = allowedExtensions.test(path.extname(file.originalname).toLowerCase());
+
+  if (isImageMime || isAllowedExt) {
     cb(null, true);
   } else {
-    cb(new Error('Only images are allowed!'), false);
+    cb(new Error('Hanya file gambar (JPG, JPEG, PNG, WEBP) yang diperbolehkan!'), false);
   }
 };
 
 const upload = multer({ 
   storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
   fileFilter: fileFilter
 });
 

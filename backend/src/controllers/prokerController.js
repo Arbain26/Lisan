@@ -4,6 +4,7 @@ const { logError } = require('../utils/logger');
 const { getScheduleDate } = require('../utils/dateHelper');
 const { evaluateProker, evaluateAllProkers } = require('../services/prokerService');
 const { generateTemplateWorkbook } = require('../services/excelParserService');
+const { uploadToStorage } = require('../services/supabaseStorage');
 
 // 1. Download Template
 exports.getTemplate = async (req, res) => {
@@ -34,7 +35,7 @@ exports.uploadProker = async (req, res) => {
   await connection.beginTransaction();
 
   try {
-    const workbook = XLSX.readFile(req.file.path);
+    const workbook = req.file.buffer ? XLSX.read(req.file.buffer, { type: 'buffer' }) : XLSX.readFile(req.file.path);
     let worksheet = null;
     let sheetName = '';
     let rows = [];
@@ -302,9 +303,10 @@ exports.uploadProker = async (req, res) => {
     }
 
     // Record file upload history in database
+    const savedName = req.file.filename || req.file.originalname;
     await connection.query(
       'INSERT INTO proker_files (filename, original_name, file_path, file_size) VALUES (?, ?, ?, ?)',
-      [req.file.filename, req.file.originalname, `/uploads/proker/${req.file.filename}`, req.file.size]
+      [savedName, req.file.originalname, `/uploads/proker/${savedName}`, req.file.size]
     );
 
     await connection.commit();
@@ -441,7 +443,7 @@ exports.updateScheduleStatus = async (req, res) => {
   try {
     let foto_url = null;
     if (req.file) {
-      foto_url = `/uploads/proker/${req.file.filename}`;
+      foto_url = await uploadToStorage(req.file, 'proker');
     }
 
     let query = 'UPDATE proker_schedule SET status = ?';

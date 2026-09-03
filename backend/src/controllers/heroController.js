@@ -1,12 +1,12 @@
 const pool = require('../../config/db');
-const fs = require('fs');
-const path = require('path');
+const { uploadToStorage, deleteFromStorage } = require('../services/supabaseStorage');
 
 exports.getHeroes = async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM hero_slides ORDER BY id DESC');
     res.json(rows);
   } catch (error) {
+    console.error('Error fetching heroes:', error);
     res.status(500).json({ message: 'Server Error' });
   }
 };
@@ -17,7 +17,7 @@ exports.createHero = async (req, res) => {
     let image_url = '';
     
     if (req.file) {
-      image_url = `/uploads/hero/${req.file.filename}`;
+      image_url = await uploadToStorage(req.file, 'hero');
     }
 
     const [result] = await pool.query(
@@ -25,9 +25,10 @@ exports.createHero = async (req, res) => {
       [image_url, title, highlight, sub]
     );
 
-    res.status(201).json({ id: result.insertId, image_url, title, highlight, sub });
+    res.status(201).json({ id: result.insertId, image_url, title, highlight, sub, message: 'Slide berhasil dibuat' });
   } catch (error) {
-    res.status(500).json({ message: 'Server Error' });
+    console.error('Error creating hero:', error);
+    res.status(500).json({ message: error.message || 'Server Error' });
   }
 };
 
@@ -40,25 +41,25 @@ exports.updateHero = async (req, res) => {
     const params = [title, highlight, sub];
 
     if (req.file) {
-      const image_url = `/uploads/hero/${req.file.filename}`;
+      // Delete old image from storage
+      const [[oldSlide]] = await pool.query('SELECT image_url FROM hero_slides WHERE id = ?', [id]);
+      if (oldSlide && oldSlide.image_url) {
+        deleteFromStorage(oldSlide.image_url).catch(err => console.warn(err));
+      }
+
+      const image_url = await uploadToStorage(req.file, 'hero');
       query += ', image_url = ?';
       params.push(image_url);
-
-      // Attempt to delete old image
-      const [[oldSlide]] = await pool.query('SELECT image_url FROM hero_slides WHERE id = ?', [id]);
-      if (oldSlide && oldSlide.image_url && oldSlide.image_url.startsWith('/uploads/')) {
-        const oldPath = path.join(__dirname, '../../../', oldSlide.image_url);
-        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-      }
     }
 
     query += ' WHERE id = ?';
     params.push(id);
 
     await pool.query(query, params);
-    res.json({ message: 'Slide updated successfully' });
+    res.json({ message: 'Slide berhasil diperbarui' });
   } catch (error) {
-    res.status(500).json({ message: 'Server Error' });
+    console.error('Error updating hero:', error);
+    res.status(500).json({ message: error.message || 'Server Error' });
   }
 };
 
@@ -67,14 +68,14 @@ exports.deleteHero = async (req, res) => {
     const { id } = req.params;
     
     const [[slide]] = await pool.query('SELECT image_url FROM hero_slides WHERE id = ?', [id]);
-    if (slide && slide.image_url && slide.image_url.startsWith('/uploads/')) {
-      const oldPath = path.join(__dirname, '../../../', slide.image_url);
-      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+    if (slide && slide.image_url) {
+      deleteFromStorage(slide.image_url).catch(err => console.warn(err));
     }
 
     await pool.query('DELETE FROM hero_slides WHERE id = ?', [id]);
-    res.json({ message: 'Slide deleted' });
+    res.json({ message: 'Slide berhasil dihapus' });
   } catch (error) {
-    res.status(500).json({ message: 'Server Error' });
+    console.error('Error deleting hero:', error);
+    res.status(500).json({ message: error.message || 'Server Error' });
   }
 };

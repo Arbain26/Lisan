@@ -33,7 +33,8 @@ const useCRUD = (endpoint) => {
       await loadData(); // Refresh table
       return true;
     } catch (error) {
-      addToast("Gagal menambahkan data", "error");
+      const msg = error.response?.data?.message || "Gagal menambahkan data";
+      addToast(msg, "error");
       return false;
     } finally {
       setIsSubmitting(false);
@@ -48,7 +49,8 @@ const useCRUD = (endpoint) => {
       await loadData();
       return true;
     } catch (error) {
-      addToast("Gagal memperbarui data", "error");
+      const msg = error.response?.data?.message || "Gagal memperbarui data";
+      addToast(msg, "error");
       return false;
     } finally {
       setIsSubmitting(false);
@@ -63,7 +65,8 @@ const useCRUD = (endpoint) => {
       await loadData();
       return true;
     } catch (error) {
-      addToast("Gagal menghapus data", "error");
+      const msg = error.response?.data?.message || "Gagal menghapus data";
+      addToast(msg, "error");
       return false;
     } finally {
       setIsSubmitting(false);
