@@ -3,7 +3,18 @@ const path = require('path');
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
 dotenv.config();
 
-const databaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_DB_URL;
+let databaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_DB_URL;
+
+// Auto-fix IPv6 direct connection to IPv4 Connection Pooler (prevents getaddrinfo ENOTFOUND)
+if (databaseUrl && databaseUrl.includes('db.jmkmjmbginnafclfpbjp.supabase.co')) {
+  databaseUrl = databaseUrl.replace('db.jmkmjmbginnafclfpbjp.supabase.co', 'aws-0-ap-northeast-1.pooler.supabase.com');
+  if (databaseUrl.includes('://postgres:')) {
+    databaseUrl = databaseUrl.replace('://postgres:', '://postgres.jmkmjmbginnafclfpbjp:');
+  }
+  if (databaseUrl.includes(':5432')) {
+    databaseUrl = databaseUrl.replace(':5432', ':6543');
+  }
+}
 
 let pool;
 
