@@ -51,8 +51,8 @@ exports.uploadProker = async (req, res) => {
       for (let i = 0; i < Math.min(tempRows.length, 20); i++) {
         if (tempRows[i] && tempRows[i].some(cell => {
           if (!cell) return false;
-          const val = cell.toString().trim().toUpperCase().replace(/\s+/g, '');
-          return val === 'KEGIATAN' || val === 'PROGRAMKERJA' || val === 'PROKER';
+          const val = cell.toString().trim().toUpperCase().replace(/[^A-Z]/g, '');
+          return val.includes('KEGIATAN') || val.includes('PROGRAM') || val.includes('PROKER');
         })) {
           hasKegiatan = true;
           break;
@@ -99,27 +99,36 @@ exports.uploadProker = async (req, res) => {
       const pIdx = row.findIndex(cell => {
         if (!cell) return false;
         const val = cell.toString().trim().toUpperCase().replace(/[^A-Z]/g, '');
-        return val.includes('PENANGGUNG') || val.includes('PJ') || val.includes('PIC') || val.includes('KOORDINATOR');
+        return val.includes('PENANGGUNG') || val.includes('PJ') || val.includes('PIC') || val.includes('KOORDINATOR') || val.includes('PELAKSANA') || val.includes('PENGURUS');
       });
       
-      if (kIdx !== -1 && pIdx !== -1) {
+      if (kIdx !== -1 && kegiatanIdx === -1) {
         headerRowIdx = i;
         kegiatanIdx = kIdx;
+      }
+      if (pIdx !== -1 && pjIdx === -1) {
         pjIdx = pIdx;
+      }
+      if (kIdx !== -1 && pIdx !== -1) {
+        headerRowIdx = i;
         break;
       }
     }
 
-    if (headerRowIdx === -1) {
+    if (kegiatanIdx === -1) {
       await connection.rollback();
       connection.release();
       return res.status(400).json({ 
-        message: 'Format file tidak sesuai. Pastikan file Excel berisi kolom "KEGIATAN" (atau "Program Kerja") dan "PENANGGUNG JAWAB".' 
+        message: 'Format file tidak sesuai. Pastikan file Excel berisi kolom "KEGIATAN" atau "Program Kerja".' 
       });
     }
 
+    if (headerRowIdx === -1) {
+      headerRowIdx = 0;
+    }
+
     // 2. Scan for KODE and Keterangan columns in header area (rows headerRowIdx to headerRowIdx + 2)
-    for (let r = headerRowIdx; r <= Math.min(headerRowIdx + 2, rows.length - 1); r++) {
+    for (let r = headerRowIdx; r <= Math.min(headerRowIdx + 3, rows.length - 1); r++) {
       const row = rows[r];
       if (!row) continue;
       
@@ -138,16 +147,33 @@ exports.uploadProker = async (req, res) => {
       }
     }
 
-    // 3. Scan for Month Columns in the header area (rows headerRowIdx to headerRowIdx + 3)
-    const monthsOrder = ['Agustus', 'September', 'Oktober', 'November', 'Desember', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli'];
+    // 3. Scan for Month Columns in the header area with support for abbreviations and English names
+    const monthPatterns = {
+      'Agustus': ['agustus', 'august', 'agu', 'agt', 'aug'],
+      'September': ['september', 'sep', 'sept'],
+      'Oktober': ['oktober', 'october', 'okt', 'oct'],
+      'November': ['november', 'nov'],
+      'Desember': ['desember', 'december', 'des', 'dec'],
+      'Januari': ['januari', 'january', 'jan'],
+      'Februari': ['februari', 'february', 'feb'],
+      'Maret': ['maret', 'march', 'mar'],
+      'April': ['april', 'apr'],
+      'Mei': ['mei', 'may'],
+      'Juni': ['juni', 'june', 'jun'],
+      'Juli': ['juli', 'july', 'jul']
+    };
     const monthColMap = {}; // monthName -> colIndex
 
-    for (const month of monthsOrder) {
+    for (const [month, patterns] of Object.entries(monthPatterns)) {
       let foundColIdx = -1;
-      for (let r = headerRowIdx; r <= Math.min(headerRowIdx + 3, rows.length - 1); r++) {
+      for (let r = headerRowIdx; r <= Math.min(headerRowIdx + 4, rows.length - 1); r++) {
         const row = rows[r];
         if (!row) continue;
-        const idx = row.findIndex(cell => cell && cell.toString().trim().toLowerCase() === month.toLowerCase());
+        const idx = row.findIndex(cell => {
+          if (!cell) return false;
+          const cleaned = cell.toString().trim().toLowerCase().replace(/[^a-z]/g, '');
+          return patterns.includes(cleaned);
+        });
         if (idx !== -1) {
           foundColIdx = idx;
           break;
@@ -158,7 +184,6 @@ exports.uploadProker = async (req, res) => {
       }
     }
 
-    const validationErrors = [];
     const prokerData = [];
 
     // 4. Parse rows & validate data (starting from the row after the header areas)
@@ -166,25 +191,27 @@ exports.uploadProker = async (req, res) => {
       const row = rows[i];
       if (!row || row.length === 0) continue;
 
-      // Skip row if it matches any header text (e.g. is the month header row itself)
-      const isHeaderRow = row[kegiatanIdx]?.toString().trim().toUpperCase() === 'KEGIATAN' || 
-                          row.some(cell => cell && monthsOrder.includes(cell.toString().trim()));
-      if (isHeaderRow) continue;
+      // Skip row if it's within the header rows and contains month names or header markers
+      if (i <= headerRowIdx + 3) {
+        const hasMonthInRow = row.some(cell => {
+          if (!cell) return false;
+          const cleaned = cell.toString().trim().toLowerCase().replace(/[^a-z]/g, '');
+          return Object.values(monthPatterns).some(pList => pList.includes(cleaned));
+        });
+        const isHeaderMarker = row[kegiatanIdx]?.toString().trim().toUpperCase().replace(/[^A-Z]/g, '').includes('KEGIATAN') ||
+                               row[kegiatanIdx]?.toString().trim().toUpperCase().replace(/[^A-Z]/g, '').includes('PROGRAM');
+        if (hasMonthInRow || isHeaderMarker) continue;
+      }
 
-      const kegiatan = row[kegiatanIdx]?.toString().trim().replace(/\s+/g, ' ');
-      const pj = row[pjIdx]?.toString().trim().replace(/\s+/g, ' ');
+      const rawKegiatan = row[kegiatanIdx]?.toString().trim().replace(/\s+/g, ' ');
+      const rawPj = pjIdx !== -1 ? row[pjIdx]?.toString().trim().replace(/\s+/g, ' ') : '';
       
-      // If kegiatan and pj are both empty, we treat it as an empty row and skip
-      if (!kegiatan && !pj) continue;
+      // If kegiatan is missing/empty, gracefully skip row (e.g. empty spacer row or trailing notes)
+      if (!rawKegiatan) continue;
 
-      if (!kegiatan) {
-        validationErrors.push(`Baris ${i + 1}: Nama kegiatan wajib diisi.`);
-        continue;
-      }
-      if (!pj) {
-        validationErrors.push(`Baris ${i + 1}: Penanggung jawab wajib diisi.`);
-        continue;
-      }
+      // Fallback PIC to '-' if unassigned in Excel
+      const pj = rawPj || '-';
+      const kegiatan = rawKegiatan;
 
       const rawKode = kodeIdx !== -1 ? row[kodeIdx]?.toString().trim() : null;
       const remarksTerlaksana = remarksTerlaksanaIdx !== -1 ? row[remarksTerlaksanaIdx]?.toString().trim() : '';
@@ -193,7 +220,7 @@ exports.uploadProker = async (req, res) => {
       // Parse schedule dates using the column mapping we discovered
       const schedules = [];
       const seenScheds = new Set();
-      monthsOrder.forEach(month => {
+      Object.keys(monthPatterns).forEach(month => {
         const mIdx = monthColMap[month];
         if (mIdx !== undefined && row[mIdx]) {
           const val = row[mIdx].toString().trim();
@@ -224,10 +251,10 @@ exports.uploadProker = async (req, res) => {
       });
     }
 
-    if (validationErrors.length > 0) {
+    if (prokerData.length === 0) {
       await connection.rollback();
       connection.release();
-      return res.status(400).json({ message: 'Validasi data gagal', errors: validationErrors });
+      return res.status(400).json({ message: 'Tidak ditemukan baris data Program Kerja yang valid di dalam file Excel' });
     }
 
     // Process DB changes
@@ -309,8 +336,23 @@ exports.uploadProker = async (req, res) => {
       await evaluateProker(prokerId, connection);
     }
 
-    // Record file upload history in database
-    const savedName = req.file.filename || req.file.originalname;
+    // Record file upload history in database and persist buffer if available
+    const uploadDir = path.join(__dirname, '..', '..', 'uploads', 'proker');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    const cleanOrigName = (req.file.originalname || 'matriks_proker.xlsx').replace(/[^a-zA-Z0-9.-]/g, '_');
+    const uniqueFileName = `${Date.now()}-${cleanOrigName}`;
+    const targetDiskPath = path.join(uploadDir, uniqueFileName);
+    if (req.file.buffer) {
+      try {
+        fs.writeFileSync(targetDiskPath, req.file.buffer);
+      } catch (err) {
+        console.warn('Could not write uploaded file to disk (may be read-only in serverless):', err.message);
+      }
+    }
+
+    const savedName = req.file.filename || uniqueFileName;
     await connection.query(
       'INSERT INTO proker_files (filename, original_name, file_path, file_size) VALUES (?, ?, ?, ?)',
       [savedName, req.file.originalname, `/uploads/proker/${savedName}`, req.file.size]

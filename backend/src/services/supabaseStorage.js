@@ -1,4 +1,14 @@
-const { createClient } = require('@supabase/supabase-js');
+let createClient = null;
+try {
+  createClient = require('@supabase/supabase-js').createClient;
+} catch (e) {
+  try {
+    const rootPath = require('path').resolve(__dirname, '../../../../node_modules/@supabase/supabase-js');
+    createClient = require(rootPath).createClient;
+  } catch (err) {
+    // Supabase module optional when running in local storage mode
+  }
+}
 const path = require('path');
 const fs = require('fs');
 
@@ -7,7 +17,7 @@ const supabaseKey = process.env.SUPABASE_KEY || process.env.SUPABASE_SERVICE_ROL
 const bucketName = process.env.SUPABASE_STORAGE_BUCKET || 'lisan-media';
 
 let supabase = null;
-if (supabaseUrl && supabaseKey) {
+if (supabaseUrl && supabaseKey && createClient) {
   supabase = createClient(supabaseUrl, supabaseKey);
 }
 
