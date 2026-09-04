@@ -188,6 +188,25 @@ const Relawan = () => {
       'Keterangan': r.keterangan || ''
     }));
     const ws = XLSX.utils.json_to_sheet(rows);
+
+    // Atur lebar kolom yang lapang dan rapi
+    ws['!cols'] = [
+      { wch: 6 },   // No
+      { wch: 32 },  // Nama
+      { wch: 32 },  // Instansi
+      { wch: 24 },  // Daerah
+      { wch: 16 },  // Golongan Darah
+      { wch: 20 },  // No HP
+      { wch: 36 }   // Keterangan
+    ];
+
+    // Atur tinggi baris
+    const rowHeights = [{ hpt: 26 }];
+    for (let i = 0; i < rows.length; i++) {
+      rowHeights.push({ hpt: 22 });
+    }
+    ws['!rows'] = rowHeights;
+
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Database Relawan');
     XLSX.writeFile(wb, `Data_Relawan_LISAN_${new Date().toISOString().slice(0, 10)}.xlsx`);
@@ -209,10 +228,26 @@ const Relawan = () => {
         'Daerah': 'Gowa',
         'Golongan Darah': 'A',
         'No HP': '085234567891',
-        'Keterangan': ''
+        'Keterangan': 'Koordinator lapangan'
       }
     ];
     const ws = XLSX.utils.json_to_sheet(templateRows);
+
+    ws['!cols'] = [
+      { wch: 30 },  // Nama
+      { wch: 32 },  // Instansi
+      { wch: 24 },  // Daerah
+      { wch: 16 },  // Golongan Darah
+      { wch: 20 },  // No HP
+      { wch: 36 }   // Keterangan
+    ];
+
+    ws['!rows'] = [
+      { hpt: 26 },
+      { hpt: 22 },
+      { hpt: 22 }
+    ];
+
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Template Relawan');
     XLSX.writeFile(wb, 'template_import_relawan.xlsx');

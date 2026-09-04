@@ -219,15 +219,35 @@ const Kader = () => {
       'Angkatan': k.angkatan || '',
       'Kampus': k.kampus || '',
       'Alamat': k.alamat || '',
-      'Jenjang Kaderisasi': k.jenjang || '',
+      'Jenjang Kaderisasi': k.jenjang_kaderisasi || k.jenjang || '',
       'Semester': k.semester || '',
       'Status': k.status || 'Aktif'
     }));
     const ws = XLSX.utils.json_to_sheet(rows);
+
+    // Atur lebar kolom yang lapang dan rapi
+    ws['!cols'] = [
+      { wch: 6 },   // No
+      { wch: 32 },  // Nama
+      { wch: 18 },  // Angkatan
+      { wch: 32 },  // Kampus
+      { wch: 36 },  // Alamat
+      { wch: 24 },  // Jenjang Kaderisasi
+      { wch: 16 },  // Semester
+      { wch: 14 }   // Status
+    ];
+
+    // Atur tinggi baris header dan baris data
+    const rowHeights = [{ hpt: 26 }];
+    for (let i = 0; i < rows.length; i++) {
+      rowHeights.push({ hpt: 22 });
+    }
+    ws['!rows'] = rowHeights;
+
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Database Kader');
     XLSX.writeFile(wb, `Data_Kader_LISAN_${new Date().toISOString().slice(0, 10)}.xlsx`);
-    toast.success('Data kader berhasil diunduh ke Excel');
+    toast.success('Data kader berhasil diunduh ke Excel dengan format rapi');
   };
 
   const handleDownloadTemplate = () => {
@@ -252,6 +272,23 @@ const Kader = () => {
       }
     ];
     const ws = XLSX.utils.json_to_sheet(templateRows);
+
+    ws['!cols'] = [
+      { wch: 30 },  // Nama
+      { wch: 18 },  // Angkatan
+      { wch: 32 },  // Kampus
+      { wch: 36 },  // Alamat
+      { wch: 24 },  // Jenjang Kaderisasi
+      { wch: 16 },  // Semester
+      { wch: 14 }   // Status
+    ];
+
+    ws['!rows'] = [
+      { hpt: 26 },
+      { hpt: 22 },
+      { hpt: 22 }
+    ];
+
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Template Kader');
     XLSX.writeFile(wb, 'template_import_kader.xlsx');

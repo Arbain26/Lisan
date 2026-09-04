@@ -174,30 +174,96 @@ const Proker = () => {
       'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli'
     ];
 
-    const exportRows = prokers.map((p, idx) => {
-      const row = {
-        'KODE': p.kode || `PRK-${String(idx + 1).padStart(3, '0')}`,
-        'KEGIATAN': p.kegiatan || p.nama_kegiatan || '',
-        'PENANGGUNG JAWAB': p.penanggung_jawab || '',
-      };
+    // Multi-level hierarchical header matrix matching the web layout and standard matrix format
+    const headerRows = [
+      [
+        'No', 'Kode', 'Program Kerja / Kegiatan', 'Penanggung Jawab', 
+        'Bulan Perencanaan', '', '', '', '', '', '', '', '', '', '', '', 
+        'Status Kerja', 'Progres Realisasi', 'Keterangan Terlaksana', 'Keterangan Tidak Terlaksana'
+      ],
+      [
+        '', '', '', '', 
+        'Semester Ganjil', '', '', '', '', '', 
+        'Semester Genap', '', '', '', '', '', 
+        '', '', '', ''
+      ],
+      [
+        '', '', '', '', 
+        'Agustus', 'September', 'Oktober', 'November', 'Desember', 'Januari',
+        'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli',
+        '', '', '', ''
+      ]
+    ];
 
-      months.forEach(m => {
+    const dataRows = prokers.map((p, idx) => {
+      const monthValues = months.map(m => {
         const scheds = (p.schedules || []).filter(s => s.bulan && s.bulan.toLowerCase() === m.toLowerCase());
-        row[m] = scheds.map(s => s.tanggal).join(', ');
+        return scheds.map(s => s.tanggal).filter(Boolean).join(', ');
       });
 
-      row['Keterangan Terlaksana'] = p.keterangan_terlaksana || '';
-      row['Keterangan Tidak Terlaksana'] = p.keterangan_tidak_terlaksana || '';
+      const progresPercent = typeof p.progres === 'number' ? `${Math.round(p.progres)}%` : '0%';
 
-      return row;
+      return [
+        idx + 1,
+        p.kode || `PRK-${String(idx + 1).padStart(3, '0')}`,
+        p.kegiatan || p.nama_kegiatan || '',
+        p.penanggung_jawab || '',
+        ...monthValues,
+        p.status || 'Belum Mulai',
+        progresPercent,
+        p.keterangan_terlaksana || '',
+        p.keterangan_tidak_terlaksana || ''
+      ];
     });
 
-    const ws = XLSX.utils.json_to_sheet(exportRows);
+    const ws = XLSX.utils.aoa_to_sheet([...headerRows, ...dataRows]);
+
+    // Merges for multi-tier matrix header
+    ws['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 2, c: 0 } },  // No
+      { s: { r: 0, c: 1 }, e: { r: 2, c: 1 } },  // Kode
+      { s: { r: 0, c: 2 }, e: { r: 2, c: 2 } },  // Program Kerja / Kegiatan
+      { s: { r: 0, c: 3 }, e: { r: 2, c: 3 } },  // Penanggung Jawab
+      { s: { r: 0, c: 4 }, e: { r: 0, c: 15 } }, // Bulan Perencanaan (12 bulan)
+      { s: { r: 1, c: 4 }, e: { r: 1, c: 9 } },  // Semester Ganjil (Agustus - Januari)
+      { s: { r: 1, c: 10 }, e: { r: 1, c: 15 } },// Semester Genap (Februari - Juli)
+      { s: { r: 0, c: 16 }, e: { r: 2, c: 16 } }, // Status Kerja
+      { s: { r: 0, c: 17 }, e: { r: 2, c: 17 } }, // Progres Realisasi
+      { s: { r: 0, c: 18 }, e: { r: 2, c: 18 } }, // Keterangan Terlaksana
+      { s: { r: 0, c: 19 }, e: { r: 2, c: 19 } }  // Keterangan Tidak Terlaksana
+    ];
+
+    // Lebar kolom rapi & lapang
+    ws['!cols'] = [
+      { wch: 6 },   // No
+      { wch: 14 },  // Kode
+      { wch: 40 },  // Program Kerja / Kegiatan
+      { wch: 35 },  // Penanggung Jawab
+      // 12 Bulan Perencanaan
+      { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 16 },
+      { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 16 },
+      { wch: 18 },  // Status Kerja
+      { wch: 18 },  // Progres Realisasi
+      { wch: 40 },  // Keterangan Terlaksana
+      { wch: 40 }   // Keterangan Tidak Terlaksana
+    ];
+
+    // Tinggi baris rapi
+    const rowHeights = [
+      { hpt: 28 }, // Baris header 1
+      { hpt: 22 }, // Baris header 2
+      { hpt: 22 }  // Baris header 3
+    ];
+    for (let i = 0; i < dataRows.length; i++) {
+      rowHeights.push({ hpt: 24 });
+    }
+    ws['!rows'] = rowHeights;
+
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Matriks Proker");
     const cleanYear = (selectedYear || "2025-2026").replace(/[^a-zA-Z0-9]/g, "_");
     XLSX.writeFile(wb, `Matriks_Program_Kerja_LISAN_${cleanYear}.xlsx`);
-    toast.success("Data matriks proker berhasil diekspor ke Excel");
+    toast.success("Data matriks proker berhasil diekspor ke Excel dengan format rapi");
   };
 
   const handleFileChange = (e) => {
