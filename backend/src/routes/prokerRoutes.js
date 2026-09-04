@@ -14,6 +14,7 @@ const {
   readNotification,
   getProkerDashboard,
   getUploadedFiles,
+  downloadUploadedFile,
   addScheduleDate,
   editScheduleDate,
   deleteScheduleDate
@@ -58,6 +59,7 @@ const upload = multer({
 router.get('/template', getTemplate);
 router.get('/public', getAllProker); // NEW: Public route for Home page
 router.get('/files', protect, getUploadedFiles);
+router.get('/files/:id/download', protect, downloadUploadedFile);
 router.get('/', protect, getAllProker);
 router.get('/dashboard', protect, getProkerDashboard);
 router.post('/upload', protect, (req, res, next) => {

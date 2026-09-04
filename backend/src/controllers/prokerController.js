@@ -1,5 +1,7 @@
 const pool = require('../../config/db');
 const XLSX = require('xlsx');
+const path = require('path');
+const fs = require('fs');
 const { logError } = require('../utils/logger');
 
 // Helper to map month and date to actual calendar date
@@ -188,7 +190,7 @@ exports.getTemplate = async (req, res) => {
       ['PRK-003', 'TOT', 'Arsyidsyah Anwar', '', '', '22-23 Lis', '', '', '', '', '', '', '', '', '', 'Training of Trainer sukses dilaksanakan.', '']
     ];
 
-    const wb = XLSX.book_new();
+    const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet(data);
     
     // Set column widths
@@ -823,6 +825,26 @@ exports.getUploadedFiles = async (req, res) => {
   } catch (error) {
     logError('getUploadedFiles', error);
     res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+// 8b. Download original uploaded Excel file
+exports.downloadUploadedFile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [rows] = await pool.query('SELECT * FROM proker_files WHERE id = ?', [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'File tidak ditemukan di database' });
+    }
+    const file = rows[0];
+    const filePath = path.join(__dirname, '..', '..', 'uploads', 'proker', file.filename);
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ message: 'File fisik tidak ditemukan di server' });
+    }
+    res.download(filePath, file.original_name);
+  } catch (error) {
+    logError('downloadUploadedFile', error);
+    res.status(500).json({ message: 'Gagal mengunduh file' });
   }
 };
 

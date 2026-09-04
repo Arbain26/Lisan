@@ -22,9 +22,11 @@ import {
   Camera,
   Edit,
   Trash,
-  Plus
+  Plus,
+  FileDown
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import * as XLSX from "xlsx";
 import api from "../../services/api";
 import { useToast } from "../../components/ui/ToastProvider";
 import { getMediaUrl } from "../../services/mediaUrl";
@@ -131,11 +133,73 @@ const Proker = () => {
       document.body.appendChild(link);
       link.click();
       link.remove();
+      window.URL.revokeObjectURL(url);
       toast.success("Template Excel berhasil diunduh");
     } catch (error) {
       console.error("Download error:", error);
       toast.error("Gagal mengunduh template Excel");
     }
+  };
+
+  const handleDownloadUploadedFile = async (file) => {
+    try {
+      const response = await api.get(`/proker/files/${file.id}/download`, { responseType: "blob" });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", file.original_name || "matriks_proker.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success(`File "${file.original_name}" berhasil diunduh`);
+    } catch (error) {
+      console.error("Download error:", error);
+      if (file.file_path) {
+        window.open(getMediaUrl(file.file_path), "_blank");
+      } else {
+        toast.error("Gagal mengunduh file matriks");
+      }
+    }
+  };
+
+  const handleExportProkerData = () => {
+    if (!prokers || prokers.length === 0) {
+      toast.error("Belum ada data program kerja untuk diekspor");
+      return;
+    }
+
+    const months = [
+      'Agustus', 'September', 'Oktober', 'November', 'Desember', 'Januari',
+      'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli'
+    ];
+
+    const exportRows = prokers.map((p, idx) => {
+      const row = {
+        'NO': idx + 1,
+        'KODE': p.kode || '',
+        'KEGIATAN': p.nama_kegiatan || '',
+        'PENANGGUNG JAWAB': p.penanggung_jawab || '',
+      };
+
+      months.forEach(m => {
+        const scheds = (p.schedules || []).filter(s => s.bulan && s.bulan.toLowerCase() === m.toLowerCase());
+        row[m] = scheds.map(s => s.tanggal).join(', ');
+      });
+
+      row['STATUS'] = p.status || 'Belum Mulai';
+      row['KETERANGAN TERLAKSANA'] = p.keterangan_terlaksana || '';
+      row['KETERANGAN TIDAK TERLAKSANA'] = p.keterangan_tidak_terlaksana || '';
+
+      return row;
+    });
+
+    const ws = XLSX.utils.json_to_sheet(exportRows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Matriks Proker");
+    const cleanYear = (selectedYear || "2025-2026").replace(/[^a-zA-Z0-9]/g, "_");
+    XLSX.writeFile(wb, `Matriks_Program_Kerja_LISAN_${cleanYear}.xlsx`);
+    toast.success("Data matriks proker berhasil diekspor ke Excel");
   };
 
   const handleFileChange = (e) => {
@@ -473,14 +537,23 @@ const Proker = () => {
           <div className="flex flex-wrap gap-3 shrink-0">
             <button
               onClick={handleDownloadTemplate}
-              className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white border border-white/20 px-5 py-3 rounded-2xl font-inter font-medium text-sm transition-all"
+              className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white border border-white/20 px-4 py-2.5 rounded-2xl font-inter font-medium text-sm transition-all"
+              title="Unduh format template Excel untuk diisi"
             >
               <Download size={18} />
-              Unduh Template Excel
+              Unduh Template
+            </button>
+            <button
+              onClick={handleExportProkerData}
+              className="flex items-center gap-2 bg-emerald-600/80 hover:bg-emerald-600 text-white border border-emerald-500/30 px-4 py-2.5 rounded-2xl font-inter font-medium text-sm transition-all shadow-md shadow-emerald-950/20"
+              title="Unduh seluruh data program kerja dan matriks yang ada ke Excel"
+            >
+              <FileDown size={18} />
+              Ekspor Data Excel
             </button>
             <button
               onClick={() => setIsUploadModalOpen(true)}
-              className="flex items-center gap-2 bg-primary hover:bg-red-800 text-white px-5 py-3 rounded-2xl font-inter font-semibold text-sm transition-all shadow-lg shadow-primary/30"
+              className="flex items-center gap-2 bg-primary hover:bg-red-800 text-white px-5 py-2.5 rounded-2xl font-inter font-semibold text-sm transition-all shadow-lg shadow-primary/30"
             >
               <Upload size={18} />
               Upload Matriks Excel
@@ -685,15 +758,14 @@ const Proker = () => {
                             </p>
                           </div>
                         </div>
-                        <a
-                          href={getMediaUrl(file.file_path)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-1.5 bg-gray-50 hover:bg-emerald-50 text-gray-500 hover:text-emerald-600 border border-gray-200 hover:border-emerald-200 rounded-lg transition-colors shrink-0"
-                          title="Unduh Dokumen"
+                        <button
+                          type="button"
+                          onClick={() => handleDownloadUploadedFile(file)}
+                          className="p-1.5 bg-gray-50 hover:bg-emerald-50 text-gray-500 hover:text-emerald-600 border border-gray-200 hover:border-emerald-200 rounded-lg transition-colors shrink-0 cursor-pointer"
+                          title={`Unduh Dokumen: ${file.original_name}`}
                         >
                           <Download size={14} />
-                        </a>
+                        </button>
                       </div>
                     ))}
                   </div>

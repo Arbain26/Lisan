@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, Search, Edit2, Trash2, Download, Loader2 } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Download, Upload, FileSpreadsheet, Loader2 } from "lucide-react";
 import useCRUD from "../../hooks/useCRUD";
 import Modal from "../../components/ui/Modal";
 import ConfirmModal from "../../components/ui/ConfirmModal";
@@ -160,6 +160,51 @@ const Relawan = () => {
     reader.readAsBinaryString(file);
   };
 
+  const handleExportExcel = () => {
+    if (!data || data.length === 0) {
+      alert("Tidak ada data relawan untuk diunduh.");
+      return;
+    }
+    const rows = data.map((r, idx) => ({
+      'No': idx + 1,
+      'Nama': r.nama || '',
+      'Instansi': r.instansi || '',
+      'Daerah': r.daerah || '',
+      'Golongan Darah': r.golongan_darah || '',
+      'No HP': r.no_hp || '',
+      'Keterangan': r.keterangan || ''
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Database Relawan');
+    XLSX.writeFile(wb, `Data_Relawan_LISAN_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
+
+  const handleDownloadTemplate = () => {
+    const templateRows = [
+      {
+        'Nama': 'Ahmad Fauzan',
+        'Instansi': 'Universitas Hasanuddin',
+        'Daerah': 'Makassar',
+        'Golongan Darah': 'O',
+        'No HP': '081234567890',
+        'Keterangan': 'Aktif kegiatan sosial'
+      },
+      {
+        'Nama': 'Siti Rahma',
+        'Instansi': 'UIN Alauddin Makassar',
+        'Daerah': 'Gowa',
+        'Golongan Darah': 'A',
+        'No HP': '085234567891',
+        'Keterangan': ''
+      }
+    ];
+    const ws = XLSX.utils.json_to_sheet(templateRows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Template Relawan');
+    XLSX.writeFile(wb, 'template_import_relawan.xlsx');
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -167,16 +212,30 @@ const Relawan = () => {
           <h1 className="text-2xl font-poppins font-bold text-gray-900">Data Relawan</h1>
           <p className="text-sm font-inter text-gray-500 mt-1">Kelola data anggota dan relawan LISAN</p>
         </div>
-        <div className="flex gap-2">
-          <button onClick={() => setIsDeleteAllModalOpen(true)} disabled={data.length === 0} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-inter font-medium transition-colors shrink-0 ${data.length === 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'}`}>
-            <Trash2 size={18} /> Hapus Semua
+        <div className="flex flex-wrap gap-2">
+          <button 
+            onClick={handleDownloadTemplate} 
+            className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-3.5 py-2.5 rounded-xl font-inter font-medium text-sm transition-colors"
+            title="Unduh format template Excel relawan"
+          >
+            <FileSpreadsheet size={17} className="text-gray-500" /> Template Excel
           </button>
-          <label className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-4 py-2.5 rounded-xl font-inter font-medium transition-colors cursor-pointer">
-            <Download size={18} className="text-gray-500" /> Import Excel
+          <button 
+            onClick={handleExportExcel} 
+            className="flex items-center gap-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-3.5 py-2.5 rounded-xl font-inter font-medium text-sm transition-colors"
+            title="Unduh seluruh data relawan ke file Excel"
+          >
+            <Download size={17} className="text-emerald-600" /> Unduh Data Excel
+          </button>
+          <label className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-3.5 py-2.5 rounded-xl font-inter font-medium text-sm transition-colors cursor-pointer">
+            <Upload size={17} className="text-gray-500" /> Import Excel
             <input type="file" accept=".xlsx, .xls, .csv" className="hidden" onChange={handleFileUpload} />
           </label>
-          <button onClick={handleOpenAdd} className="flex items-center gap-2 bg-primary hover:bg-red-800 text-white px-4 py-2.5 rounded-xl font-inter font-medium transition-colors shadow-sm shadow-primary/20 shrink-0">
-            <Plus size={18} /> Tambah Relawan
+          <button onClick={() => setIsDeleteAllModalOpen(true)} disabled={data.length === 0} className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-inter font-medium text-sm transition-colors shrink-0 ${data.length === 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'}`}>
+            <Trash2 size={17} /> Hapus Semua
+          </button>
+          <button onClick={handleOpenAdd} className="flex items-center gap-2 bg-primary hover:bg-red-800 text-white px-4 py-2.5 rounded-xl font-inter font-medium text-sm transition-colors shadow-sm shadow-primary/20 shrink-0">
+            <Plus size={17} /> Tambah Relawan
           </button>
         </div>
       </div>

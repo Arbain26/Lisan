@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, Search, Edit2, Trash2, Download, Loader2, Users, GraduationCap, School, BookOpen } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Download, Upload, FileSpreadsheet, Loader2, Users, GraduationCap, School, BookOpen } from "lucide-react";
 import useCRUD from "../../hooks/useCRUD";
 import Modal from "../../components/ui/Modal";
 import ConfirmModal from "../../components/ui/ConfirmModal";
@@ -207,6 +207,56 @@ const Kader = () => {
     reader.readAsBinaryString(file);
   };
 
+  const handleExportExcel = () => {
+    if (!data || data.length === 0) {
+      toast.error('Tidak ada data kader untuk diunduh');
+      return;
+    }
+    const rows = data.map((k, idx) => ({
+      'No': idx + 1,
+      'Nama': k.nama || '',
+      'Angkatan': k.angkatan || '',
+      'Kampus': k.kampus || '',
+      'Alamat': k.alamat || '',
+      'Jenjang Kaderisasi': k.jenjang || '',
+      'Semester': k.semester || '',
+      'Status': k.status || 'Aktif'
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Database Kader');
+    XLSX.writeFile(wb, `Data_Kader_LISAN_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    toast.success('Data kader berhasil diunduh ke Excel');
+  };
+
+  const handleDownloadTemplate = () => {
+    const templateRows = [
+      {
+        'Nama': 'Ahmad Fauzan',
+        'Angkatan': 'LISAN 2025',
+        'Kampus': 'Universitas Hasanuddin',
+        'Alamat': 'Jl. Perintis Kemerdekaan',
+        'Jenjang Kaderisasi': 'PAKET FILSAFAT',
+        'Semester': 'Semester 3',
+        'Status': 'Aktif'
+      },
+      {
+        'Nama': 'Nur Hidayah',
+        'Angkatan': 'LISAN 2024',
+        'Kampus': 'UIN Alauddin Makassar',
+        'Alamat': 'Samata, Gowa',
+        'Jenjang Kaderisasi': 'LOGIKA',
+        'Semester': 'Semester 5',
+        'Status': 'Aktif'
+      }
+    ];
+    const ws = XLSX.utils.json_to_sheet(templateRows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Template Kader');
+    XLSX.writeFile(wb, 'template_import_kader.xlsx');
+    toast.success('Template Excel Kader berhasil diunduh');
+  };
+
   // Render
   return (
     <div className="space-y-6">
@@ -217,13 +267,27 @@ const Kader = () => {
           <h1 className="text-2xl font-poppins font-bold text-gray-900">Database Kader</h1>
           <p className="text-sm font-inter text-gray-500 mt-1">Kelola data pembinaan kader LISAN secara manual atau via Excel</p>
         </div>
-        <div className="flex gap-2">
-          <label className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-4 py-2.5 rounded-xl font-inter font-medium transition-colors cursor-pointer">
-            <Download size={18} className="text-gray-500" /> Import Excel
+        <div className="flex flex-wrap gap-2">
+          <button 
+            onClick={handleDownloadTemplate} 
+            className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-3.5 py-2.5 rounded-xl font-inter font-medium text-sm transition-colors"
+            title="Unduh format template Excel kader"
+          >
+            <FileSpreadsheet size={17} className="text-gray-500" /> Template Excel
+          </button>
+          <button 
+            onClick={handleExportExcel} 
+            className="flex items-center gap-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-3.5 py-2.5 rounded-xl font-inter font-medium text-sm transition-colors"
+            title="Unduh seluruh data kader ke file Excel"
+          >
+            <Download size={17} className="text-emerald-600" /> Unduh Data Excel
+          </button>
+          <label className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-3.5 py-2.5 rounded-xl font-inter font-medium text-sm transition-colors cursor-pointer">
+            <Upload size={17} className="text-gray-500" /> Import Excel
             <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleFileUpload} />
           </label>
-          <button onClick={handleOpenAdd} className="flex items-center gap-2 bg-primary hover:bg-red-800 text-white px-4 py-2.5 rounded-xl font-inter font-medium transition-colors shadow-sm shadow-primary/20 shrink-0">
-            <Plus size={18} /> Tambah Kader
+          <button onClick={handleOpenAdd} className="flex items-center gap-2 bg-primary hover:bg-red-800 text-white px-4 py-2.5 rounded-xl font-inter font-medium text-sm transition-colors shadow-sm shadow-primary/20 shrink-0">
+            <Plus size={17} /> Tambah Kader
           </button>
         </div>
       </div>
