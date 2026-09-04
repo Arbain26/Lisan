@@ -93,10 +93,14 @@ exports.uploadProker = async (req, res) => {
       
       const kIdx = row.findIndex(cell => {
         if (!cell) return false;
-        const val = cell.toString().trim().toUpperCase().replace(/\s+/g, '');
-        return val === 'KEGIATAN' || val === 'PROGRAMKERJA' || val === 'PROKER';
+        const val = cell.toString().trim().toUpperCase().replace(/[^A-Z]/g, '');
+        return val.includes('KEGIATAN') || val.includes('PROGRAM') || val.includes('PROKER');
       });
-      const pIdx = row.findIndex(cell => cell && cell.toString().trim().toUpperCase().replace(/\s+/g, '') === 'PENANGGUNGJAWAB');
+      const pIdx = row.findIndex(cell => {
+        if (!cell) return false;
+        const val = cell.toString().trim().toUpperCase().replace(/[^A-Z]/g, '');
+        return val.includes('PENANGGUNG') || val.includes('PJ') || val.includes('PIC') || val.includes('KOORDINATOR');
+      });
       
       if (kIdx !== -1 && pIdx !== -1) {
         headerRowIdx = i;

@@ -176,9 +176,8 @@ const Proker = () => {
 
     const exportRows = prokers.map((p, idx) => {
       const row = {
-        'NO': idx + 1,
-        'KODE': p.kode || '',
-        'KEGIATAN': p.nama_kegiatan || '',
+        'KODE': p.kode || `PRK-${String(idx + 1).padStart(3, '0')}`,
+        'KEGIATAN': p.kegiatan || p.nama_kegiatan || '',
         'PENANGGUNG JAWAB': p.penanggung_jawab || '',
       };
 
@@ -187,9 +186,8 @@ const Proker = () => {
         row[m] = scheds.map(s => s.tanggal).join(', ');
       });
 
-      row['STATUS'] = p.status || 'Belum Mulai';
-      row['KETERANGAN TERLAKSANA'] = p.keterangan_terlaksana || '';
-      row['KETERANGAN TIDAK TERLAKSANA'] = p.keterangan_tidak_terlaksana || '';
+      row['Keterangan Terlaksana'] = p.keterangan_terlaksana || '';
+      row['Keterangan Tidak Terlaksana'] = p.keterangan_tidak_terlaksana || '';
 
       return row;
     });
