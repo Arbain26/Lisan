@@ -112,9 +112,8 @@ const Program = () => {
                         <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-inter font-medium bg-gray-100 text-gray-700">{item.category}</span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-inter font-medium ${
-                          item.status === "Aktif" ? "bg-emerald-100 text-emerald-700" : item.status === "Terjadwal" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-700"
-                        }`}>{item.status}</span>
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-inter font-medium ${item.status === "Aktif" ? "bg-emerald-100 text-emerald-700" : item.status === "Terjadwal" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-700"
+                          }`}>{item.status}</span>
                       </td>
                       <td className="px-6 py-4 text-sm font-inter text-gray-600">{item.participantCount} Orang</td>
                       <td className="px-6 py-4 text-right">
@@ -145,10 +144,13 @@ const Program = () => {
             <div className="space-y-1.5">
               <label className="text-sm font-inter font-medium text-gray-700">Kategori</label>
               <select value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
-                <option value="Kajian Islam">Kajian Islam</option>
-                <option value="Kaderisasi">Kaderisasi</option>
-                <option value="Sosial">Sosial</option>
-                <option value="Lainnya">Lainnya</option>
+                <option value="Kelas Mengaji">Kelas Mengaji</option>
+                <option value="Kadis">Kajian dan Diskusi</option>
+                <option value="Gerakan Kemanusiaan">Gerakan Kemanusiaan</option>
+                <option value="Pengkaderan">Pengkaderan</option>
+                <option value="Identitas Lisan">Identitas Lisan</option>
+                <option value="Kelas Ramadhan">Kelas Ramadhan</option>
+                <option value="Kelas Soft Skill">Kelas Soft Skill</option>
               </select>
             </div>
             <div className="space-y-1.5">

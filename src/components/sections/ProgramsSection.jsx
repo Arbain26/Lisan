@@ -20,11 +20,11 @@ const ProgramCard = ({ program, index }) => {
 
       {/* Card content */}
       <div className="p-8">
-        {/* Icon bubble */}
+        {/* Icon / Logo */}
         <div
-          className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${program.color_theme || 'from-primary to-red-600'} flex items-center justify-center text-3xl mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300`}
+          className="w-16 h-16 rounded-2xl bg-white border border-gray-100 flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform duration-300 overflow-hidden"
         >
-          {program.icon || '🎯'}
+          <img src="/lisan.jpeg" alt="Logo Program" className="w-full h-full object-contain p-2" />
         </div>
 
         <h3 className="font-poppins font-bold text-xl text-dark mb-3 group-hover:text-primary transition-colors duration-300">
