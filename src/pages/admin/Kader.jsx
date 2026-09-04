@@ -200,7 +200,8 @@ const Kader = () => {
         await refreshData();
       } catch (error) {
         console.error('Error import Excel:', error);
-        toast.error('Gagal mengimpor file. Pastikan format sesuai.');
+        const msg = error.response?.data?.message || error.message || 'Gagal mengimpor file. Pastikan format sesuai.';
+        toast.error(msg);
       }
       e.target.value = '';
     };

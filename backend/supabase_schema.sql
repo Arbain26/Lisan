@@ -240,12 +240,19 @@ CREATE INDEX IF NOT EXISTS idx_pesan_read ON pesan(is_read);
 CREATE TABLE IF NOT EXISTS kader (
     id SERIAL PRIMARY KEY,
     nama VARCHAR(150) NOT NULL,
-    institusi VARCHAR(150) NOT NULL,
     angkatan VARCHAR(50) NOT NULL,
-    tahun VARCHAR(10) NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    kampus VARCHAR(150) DEFAULT NULL,
+    alamat VARCHAR(255) DEFAULT NULL,
+    jenjang_kaderisasi VARCHAR(100) DEFAULT NULL,
+    semester VARCHAR(20) DEFAULT NULL,
+    status VARCHAR(50) DEFAULT NULL,
+    institusi VARCHAR(150) DEFAULT NULL,
+    tahun VARCHAR(10) DEFAULT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uq_kader_nama_angkatan UNIQUE (nama, angkatan)
 );
-CREATE INDEX IF NOT EXISTS idx_kader_tahun ON kader(tahun);
+CREATE INDEX IF NOT EXISTS idx_kader_angkatan ON kader(angkatan);
+CREATE INDEX IF NOT EXISTS idx_kader_kampus ON kader(kampus);
 
 -- ==============================================================================
 -- 13. TABEL KOORDINATOR WILAYAH (korwil)

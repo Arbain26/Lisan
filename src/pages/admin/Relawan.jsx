@@ -165,8 +165,10 @@ const Relawan = () => {
         window.location.reload();
       } catch (error) {
         console.error("Error importing file:", error);
-        alert("Gagal mengimpor file Excel. Pastikan format sesuai.");
+        const msg = error.response?.data?.message || error.message || "Gagal mengimpor file Excel. Pastikan format sesuai.";
+        alert(msg);
       }
+      e.target.value = '';
     };
     reader.readAsBinaryString(file);
   };

@@ -114,24 +114,32 @@ exports.importRelawanBulk = async (req, res) => {
       item.keterangan || '-'
     ]);
 
-    const [result] = await pool.query(
-      'INSERT INTO relawan (nama, instansi, daerah, golongan_darah, no_hp, keterangan) VALUES ?',
-      [values]
-    );
+    let affectedRows = 0;
+    const chunkSize = 100;
+    for (let i = 0; i < values.length; i += chunkSize) {
+      const chunk = values.slice(i, i + chunkSize);
+      const rowPlaceholders = chunk.map(() => '(?, ?, ?, ?, ?, ?)').join(', ');
+      const flatValues = chunk.flat();
+      const [result] = await pool.query(
+        `INSERT INTO relawan (nama, instansi, daerah, golongan_darah, no_hp, keterangan) VALUES ${rowPlaceholders}`,
+        flatValues
+      );
+      affectedRows += (result.affectedRows || chunk.length);
+    }
 
-    res.status(201).json({ message: `${result.affectedRows} data berhasil di-import` });
+    res.status(201).json({ message: `${affectedRows} data berhasil di-import` });
   } catch (error) {
     console.error('Error importing bulk relawan:', error);
-    res.status(500).json({ message: 'Terjadi kesalahan saat meng-import data' });
+    res.status(500).json({ message: error.message || 'Terjadi kesalahan saat meng-import data' });
   }
 };
 
 exports.deleteAllRelawan = async (req, res) => {
   try {
-    await pool.query('TRUNCATE TABLE relawan');
+    await pool.query('DELETE FROM relawan');
     res.json({ message: 'Seluruh data relawan berhasil dihapus' });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Server Error' });
+    res.status(500).json({ message: error.message || 'Server Error' });
   }
 };

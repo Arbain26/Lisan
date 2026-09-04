@@ -285,8 +285,8 @@ exports.uploadProker = async (req, res) => {
         } else {
           // Insert new schedule item
           const [insSched] = await connection.query(
-            'INSERT INTO proker_schedule (proker_id, bulan, tanggal, status) VALUES (?, ?, ?, "Belum Mulai")',
-            [prokerId, newSched.bulan, newSched.tanggal]
+            'INSERT INTO proker_schedule (proker_id, bulan, tanggal, status) VALUES (?, ?, ?, ?)',
+            [prokerId, newSched.bulan, newSched.tanggal, 'Belum Mulai']
           );
           keepIds.push(insSched.insertId);
         }
@@ -296,7 +296,8 @@ exports.uploadProker = async (req, res) => {
       if (existingSchedules.length > 0) {
         const deleteIds = existingSchedules.filter(s => !keepIds.includes(s.id)).map(s => s.id);
         if (deleteIds.length > 0) {
-          await connection.query('DELETE FROM proker_schedule WHERE id IN (?)', [deleteIds]);
+          const placeholders = deleteIds.map(() => '?').join(', ');
+          await connection.query(`DELETE FROM proker_schedule WHERE id IN (${placeholders})`, deleteIds);
         }
       }
 
@@ -662,8 +663,8 @@ exports.addScheduleDate = async (req, res) => {
 
     // Insert schedule
     const [result] = await pool.query(
-      'INSERT INTO proker_schedule (proker_id, bulan, tanggal, status) VALUES (?, ?, ?, "Belum Mulai")',
-      [id, bulan, tanggal]
+      'INSERT INTO proker_schedule (proker_id, bulan, tanggal, status) VALUES (?, ?, ?, ?)',
+      [id, bulan, tanggal, 'Belum Mulai']
     );
 
     const newId = result.insertId;
@@ -761,7 +762,7 @@ exports.deleteScheduleDate = async (req, res) => {
       indicator = evalResult.indicator;
     } else {
       // Set to 0% and Belum Mulai if no schedules
-      await pool.query('UPDATE proker SET progres = 0, status = "Belum Mulai" WHERE id = ?', [id]);
+      await pool.query('UPDATE proker SET progres = 0, status = ? WHERE id = ?', ['Belum Mulai', id]);
       proker.progres = 0;
       proker.status = "Belum Mulai";
     }
