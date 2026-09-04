@@ -5,6 +5,8 @@ const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
+import api from "../services/api";
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -23,24 +25,16 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Login gagal");
-      }
+      const response = await api.post("/auth/login", { email, password });
+      const data = response.data;
 
       localStorage.setItem("lisan_admin_token", data.token);
       localStorage.setItem("lisan_admin_user", JSON.stringify(data.user));
       setUser(data.user);
       return true;
     } catch (error) {
-      throw error;
+      const message = error.response?.data?.message || error.message || "Login gagal";
+      throw new Error(message);
     }
   };
 
@@ -48,7 +42,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("lisan_admin_token");
     localStorage.removeItem("lisan_admin_user");
     setUser(null);
-    navigate("/login", { replace: true });
+    navigate("/admin", { replace: true });
   };
 
   const value = {

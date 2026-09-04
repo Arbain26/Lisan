@@ -19,24 +19,8 @@ const DynamiciCon = ({ name, size = 32, className = "" }) => {
   return <IconComponent size={size} className={className} />;
 };
 
-const PageHeader = ({ title, subtitle, badge }) => (
-  <div
-    className="relative py-32 flex items-center justify-center overflow-hidden"
-    style={{ background: "linear-gradient(135deg, #111827 0%, #1a0505 50%, #111827 100%)" }}
-  >
-    <div className="absolute inset-0 opacity-5" style={{ backgroundImage: "radial-gradient(circle at 2px 2px, rgba(245,158,11,0.5) 1px, transparent 0)", backgroundSize: "32px 32px" }} />
-    <div className="relative z-10 text-center max-w-3xl mx-auto px-4">
-      {badge && (
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-5" style={{ background: "rgba(245,158,11,0.15)", border: "1px solid rgba(245,158,11,0.3)" }}>
-          <span className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
-          <span className="text-secondary text-xs font-inter font-semibold uppercase tracking-widest">{badge}</span>
-        </div>
-      )}
-      <h1 className="font-poppins font-bold text-4xl sm:text-6xl text-white mb-4">{title}</h1>
-      {subtitle && <p className="text-gray-400 font-inter text-lg">{subtitle}</p>}
-    </div>
-  </div>
-);
+import PageHeader from "../../components/ui/PageHeader";
+import { Skeleton } from "../../components/ui/Skeleton";
 
 const DepartemenPage = () => {
   const [departments, setDepartments] = useState([]);
@@ -56,17 +40,6 @@ const DepartemenPage = () => {
     fetchDepartments();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-10 h-10 text-primary animate-spin" />
-          <p className="font-inter text-gray-500 text-sm">Memuat Departemen...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <PageHeader 
@@ -76,7 +49,24 @@ const DepartemenPage = () => {
       />
       
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 w-full">
-        {departments.length === 0 ? (
+        {loading ? (
+          <div className="space-y-8">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm flex flex-col md:flex-row gap-6 items-start">
+                <Skeleton className="w-16 h-16 rounded-2xl shrink-0" />
+                <div className="flex-1 space-y-4 w-full">
+                  <Skeleton className="h-7 w-64 rounded" />
+                  <Skeleton className="h-4 w-full rounded" />
+                  <Skeleton className="h-4 w-5/6 rounded" />
+                  <div className="flex gap-2 pt-2">
+                    <Skeleton className="h-6 w-24 rounded-full" />
+                    <Skeleton className="h-6 w-32 rounded-full" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : departments.length === 0 ? (
           <div className="text-center py-12">
             <p className="font-inter text-gray-500">Belum ada departemen terdaftar saat ini.</p>
           </div>

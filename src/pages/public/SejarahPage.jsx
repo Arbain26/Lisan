@@ -1,26 +1,34 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { History, Target, ArrowRight } from "lucide-react";
-
-const PageHeader = ({ title, subtitle, badge }) => (
-  <div
-    className="relative py-32 flex items-center justify-center overflow-hidden"
-    style={{ background: "linear-gradient(135deg, #111827 0%, #1a0505 50%, #111827 100%)" }}
-  >
-    <div className="absolute inset-0 opacity-5" style={{ backgroundImage: "radial-gradient(circle at 2px 2px, rgba(245,158,11,0.5) 1px, transparent 0)", backgroundSize: "32px 32px" }} />
-    <div className="relative z-10 text-center max-w-3xl mx-auto px-4">
-      {badge && (
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-5" style={{ background: "rgba(245,158,11,0.15)", border: "1px solid rgba(245,158,11,0.3)" }}>
-          <span className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
-          <span className="text-secondary text-xs font-inter font-semibold uppercase tracking-widest">{badge}</span>
-        </div>
-      )}
-      <h1 className="font-poppins font-bold text-4xl sm:text-6xl text-white mb-4">{title}</h1>
-      {subtitle && <p className="text-gray-400 font-inter text-lg">{subtitle}</p>}
-    </div>
-  </div>
-);
+import { History, Target, ArrowRight, Loader2 } from "lucide-react";
+import PageHeader from "../../components/ui/PageHeader";
+import api from "../../services/api";
 
 const SejarahPage = () => {
+  const [sejarahText, setSejarahText] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSejarah = async () => {
+      try {
+        const response = await api.get("/settings");
+        if (response.data && response.data.sejarah) {
+          setSejarahText(response.data.sejarah);
+        }
+      } catch (err) {
+        console.error("Gagal memuat sejarah:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSejarah();
+  }, []);
+
+  const paragraphs = sejarahText
+    ? sejarahText.split("\n\n").filter(p => p.trim() !== "")
+    : [];
+
   return (
     <div className="min-h-screen bg-white">
       <PageHeader 
@@ -30,43 +38,51 @@ const SejarahPage = () => {
       />
       
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="prose prose-lg prose-red max-w-none font-inter text-gray-600 leading-relaxed"
-        >
-          <div className="flex items-center gap-4 mb-8 text-primary">
-            <History size={32} />
-            <h2 className="text-3xl font-poppins font-bold text-dark m-0">Awal Mula Pergerakan</h2>
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-16 gap-3">
+            <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            <p className="text-gray-400 font-inter text-sm">Memuat rekam jejak sejarah...</p>
           </div>
-          
-          <p className="text-xl text-gray-800 font-medium mb-8">
-            Berawal dari kepedulian mendalam terhadap dinamika mahasiswa dan pemuda di Kabupaten Sidenreng Rappang, sekelompok mahasiswa Muslim berkumpul untuk menyatukan visi dalam sebuah pergerakan intelektual dan spiritual.
-          </p>
-
-          <p>
-            Lingkar Mahasiswa Islam untuk Perubahan (LISAN) didirikan dengan semangat untuk memberikan kontribusi nyata bagi masyarakat. Di tengah arus modernisasi yang bergerak cepat, LISAN hadir sebagai wadah pembinaan yang fokus pada pengembangan karakter, integritas, dan kapasitas kepemimpinan mahasiswa berlandaskan nilai-nilai Islam.
-          </p>
-
-          <p>
-            Pada masa-masa awalnya, organisasi ini bermula dari kelompok-kelompok kajian kecil (halaqah) di kampus-kampus lokal. Diskusi-diskusi intensif mengenai peran mahasiswa sebagai <i>Agent of Change</i> dan <i>Iron Stock</i> mendorong para pendiri untuk melembagakan gerakan ini agar dapat memberikan dampak yang lebih luas dan terstruktur.
-          </p>
-
-          <div className="my-12 p-8 bg-red-50 rounded-3xl border border-red-100 relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-8 opacity-10">
-              <Target size={120} className="text-primary" />
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="prose prose-lg prose-red max-w-none font-inter text-gray-600 leading-relaxed"
+          >
+            <div className="flex items-center gap-4 mb-8 text-primary">
+              <History size={32} />
+              <h2 className="text-3xl font-poppins font-bold text-dark m-0">Awal Mula Pergerakan</h2>
             </div>
-            <h3 className="text-2xl font-poppins font-bold text-dark mb-4 relative z-10">Tonggak Bersejarah</h3>
-            <p className="relative z-10">
-              Deklarasi berdirinya LISAN menjadi momentum penting penyatuan berbagai elemen mahasiswa Muslim Sidrap. Sejak saat itu, LISAN mulai aktif menyelenggarakan berbagai program mulai dari kaderisasi, kajian strategis, hingga aksi sosial dan kemanusiaan yang manfaatnya langsung dirasakan oleh masyarakat.
-            </p>
-          </div>
+            
+            {paragraphs.length > 0 ? (
+              paragraphs.map((para, index) => {
+                // Beri aksen card pada paragraf kedua atau ketiga jika ada
+                if (index === 2) {
+                  return (
+                    <div key={index} className="my-12 p-8 bg-red-50 rounded-3xl border border-red-100 relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-8 opacity-10">
+                        <Target size={120} className="text-primary" />
+                      </div>
+                      <h3 className="text-2xl font-poppins font-bold text-dark mb-4 relative z-10">Tonggak Bersejarah</h3>
+                      <p className="relative z-10 whitespace-pre-line m-0">
+                        {para}
+                      </p>
+                    </div>
+                  );
+                }
 
-          <p>
-            Hingga hari ini, LISAN terus berkembang dan melebarkan sayapnya. Organisasi ini tidak hanya menjadi tempat berkumpul, melainkan sebuah "laboratorium kepemimpinan" yang telah melahirkan banyak alumni sukses dan berpengaruh di berbagai bidang profesi. Perjalanan panjang LISAN adalah bukti nyata dari konsistensi perjuangan pemuda yang memegang teguh idealisme dan kebersamaan.
-          </p>
-        </motion.div>
+                return (
+                  <p key={index} className={`whitespace-pre-line ${index === 0 ? "text-xl text-gray-800 font-medium mb-8" : "mb-6"}`}>
+                    {para}
+                  </p>
+                );
+              })
+            ) : (
+              <p className="text-gray-500 italic">Konten sejarah belum diisi oleh pengurus.</p>
+            )}
+          </motion.div>
+        )}
 
         <motion.div
           initial={{ opacity: 0 }}

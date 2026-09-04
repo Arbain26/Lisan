@@ -20,27 +20,9 @@ const {
   deleteScheduleDate
 } = require('../controllers/prokerController');
 
-// Multer disk storage configuration for Excel files
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const dir = path.join(__dirname, '..', '..', 'uploads', 'proker');
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    cb(null, dir);
-  },
-  filename: function (req, file, cb) {
-    const ext = path.extname(file.originalname).toLowerCase();
-    const cleanName = path.basename(file.originalname, ext)
-      .replace(/[^a-zA-Z0-9]/g, '-')
-      .replace(/-+/g, '-');
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, `${cleanName}-${uniqueSuffix}${ext}`);
-  }
-});
-
+// Multer memory storage configuration for Excel files (serverless-compatible)
 const upload = multer({
-  storage: storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // Max 10MB
   fileFilter: (req, file, cb) => {
     const filetypes = /xlsx|xls|spreadsheet/;

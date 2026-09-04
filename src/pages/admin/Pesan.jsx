@@ -244,7 +244,10 @@ const Pesan = () => {
                           <Phone size={13} /> Hubungi Telepon ({bloodDetails.phone})
                         </a>
                         <a
-                          href={`https://wa.me/${bloodDetails.phone.replace(/[^\d]/g, "")}`}
+                          href={`https://wa.me/${(() => {
+                            let p = bloodDetails.phone.replace(/[^\d]/g, "");
+                            return p.startsWith("0") ? "62" + p.slice(1) : p;
+                          })()}?text=${encodeURIComponent("Assalamu'alaikum warahmatullahi wabarakatuh, kami dari lingkar donor darah sidrap, dapat informasi bahwa butuhki darah kak")}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center justify-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-4 py-2 rounded-xl transition-colors font-medium"

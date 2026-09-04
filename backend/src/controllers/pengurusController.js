@@ -1,6 +1,5 @@
 const pool = require('../../config/db');
-const fs = require('fs');
-const path = require('path');
+const { uploadToStorage, deleteFromStorage } = require('../services/supabaseStorage');
 
 exports.getAllPengurus = async (req, res) => {
   try {
@@ -33,7 +32,7 @@ exports.getPengurusById = async (req, res) => {
 
 exports.createPengurus = async (req, res) => {
   try {
-    const { nama, jabatan, departemen_id, urutan } = req.body;
+    const { nama, jabatan, departemen_id, urutan, bio, email, instagram, linkedin, kampus } = req.body;
 
     if (!nama || !jabatan) {
       return res.status(400).json({ message: 'Nama dan jabatan wajib diisi' });
@@ -41,7 +40,7 @@ exports.createPengurus = async (req, res) => {
 
     let foto_url = null;
     if (req.file) {
-      foto_url = `/uploads/pengurus/${req.file.filename}`;
+      foto_url = await uploadToStorage(req.file, 'pengurus');
     }
 
     // Convert empty or 'null' departemen_id to actual null
@@ -49,21 +48,21 @@ exports.createPengurus = async (req, res) => {
     const orderIndex = urutan ? parseInt(urutan, 10) : 0;
 
     const [result] = await pool.query(
-      'INSERT INTO pengurus (nama, jabatan, departemen_id, foto_url, urutan) VALUES (?, ?, ?, ?, ?)',
-      [nama, jabatan, deptId, foto_url, orderIndex]
+      'INSERT INTO pengurus (nama, jabatan, departemen_id, foto_url, urutan, bio, email, instagram, linkedin, kampus) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [nama, jabatan, deptId, foto_url, orderIndex, bio || null, email || null, instagram || null, linkedin || null, kampus || null]
     );
 
-    res.status(201).json({ id: result.insertId, message: 'Pengurus berhasil ditambahkan' });
+    res.status(201).json({ id: result.insertId, foto_url, message: 'Pengurus berhasil ditambahkan' });
   } catch (error) {
     console.error('Error creating pengurus:', error);
-    res.status(500).json({ message: 'Server Error' });
+    res.status(500).json({ message: error.message || 'Server Error' });
   }
 };
 
 exports.updatePengurus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { nama, jabatan, departemen_id, urutan } = req.body;
+    const { nama, jabatan, departemen_id, urutan, bio, email, instagram, linkedin, kampus } = req.body;
 
     if (!nama || !jabatan) {
       return res.status(400).json({ message: 'Nama dan jabatan wajib diisi' });
@@ -73,20 +72,19 @@ exports.updatePengurus = async (req, res) => {
     const deptId = (!departemen_id || departemen_id === 'null' || departemen_id === '') ? null : parseInt(departemen_id, 10);
     const orderIndex = urutan ? parseInt(urutan, 10) : 0;
 
-    let query = 'UPDATE pengurus SET nama = ?, jabatan = ?, departemen_id = ?, urutan = ?';
-    const params = [nama, jabatan, deptId, orderIndex];
+    let query = 'UPDATE pengurus SET nama = ?, jabatan = ?, departemen_id = ?, urutan = ?, bio = ?, email = ?, instagram = ?, linkedin = ?, kampus = ?';
+    const params = [nama, jabatan, deptId, orderIndex, bio || null, email || null, instagram || null, linkedin || null, kampus || null];
 
     if (req.file) {
-      const foto_url = `/uploads/pengurus/${req.file.filename}`;
+      // Delete old photo from storage
+      const [[oldPengurus]] = await pool.query('SELECT foto_url FROM pengurus WHERE id = ?', [id]);
+      if (oldPengurus && oldPengurus.foto_url) {
+        deleteFromStorage(oldPengurus.foto_url).catch(err => console.warn(err));
+      }
+
+      const foto_url = await uploadToStorage(req.file, 'pengurus');
       query += ', foto_url = ?';
       params.push(foto_url);
-
-      // Attempt to delete old photo
-      const [[oldPengurus]] = await pool.query('SELECT foto_url FROM pengurus WHERE id = ?', [id]);
-      if (oldPengurus && oldPengurus.foto_url && oldPengurus.foto_url.startsWith('/uploads/')) {
-        const oldPath = path.join(__dirname, '../../../', oldPengurus.foto_url);
-        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-      }
     }
 
     query += ' WHERE id = ?';
@@ -101,7 +99,7 @@ exports.updatePengurus = async (req, res) => {
     res.json({ message: 'Pengurus berhasil diperbarui' });
   } catch (error) {
     console.error('Error updating pengurus:', error);
-    res.status(500).json({ message: 'Server Error' });
+    res.status(500).json({ message: error.message || 'Server Error' });
   }
 };
 
@@ -110,9 +108,8 @@ exports.deletePengurus = async (req, res) => {
     const { id } = req.params;
 
     const [[pengurus]] = await pool.query('SELECT foto_url FROM pengurus WHERE id = ?', [id]);
-    if (pengurus && pengurus.foto_url && pengurus.foto_url.startsWith('/uploads/')) {
-      const oldPath = path.join(__dirname, '../../../', pengurus.foto_url);
-      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+    if (pengurus && pengurus.foto_url) {
+      deleteFromStorage(pengurus.foto_url).catch(err => console.warn(err));
     }
 
     const [result] = await pool.query('DELETE FROM pengurus WHERE id = ?', [id]);
@@ -124,6 +121,6 @@ exports.deletePengurus = async (req, res) => {
     res.json({ message: 'Pengurus berhasil dihapus' });
   } catch (error) {
     console.error('Error deleting pengurus:', error);
-    res.status(500).json({ message: 'Server Error' });
+    res.status(500).json({ message: error.message || 'Server Error' });
   }
 };

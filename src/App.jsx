@@ -5,7 +5,6 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Layout from "./components/layout/Layout";
 import AdminLayout from "./components/layout/AdminLayout";
 import Home from "./pages/Home";
-import Login from "./pages/auth/Login";
 
 import {
   AboutPage,
@@ -38,6 +37,8 @@ import Kader from "./pages/admin/Kader";
 import Pengaturan from "./pages/admin/Pengaturan";
 import HeroSlides from "./pages/admin/HeroSlides";
 import Struktur from "./pages/admin/Struktur";
+import Profil from "./pages/admin/Profil";
+import KorwilAdmin from "./pages/admin/Korwil";
 
 // Providers
 import { ToastProvider } from "./components/ui/ToastProvider";
@@ -83,8 +84,9 @@ function App() {
               <Route path="/join" element={<PageTransition><JoinPage /></PageTransition>} />
             </Route>
 
-            {/* Auth Route */}
-            <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
+            {/* Auth Routes - Redirected to /admin */}
+            <Route path="/login" element={<Navigate to="/admin" replace />} />
+            <Route path="/admin/login" element={<Navigate to="/admin" replace />} />
 
             {/* Protected Admin Routes */}
             <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
@@ -101,6 +103,8 @@ function App() {
               <Route path="pesan" element={<PageTransition><Pesan /></PageTransition>} />
               <Route path="kader" element={<PageTransition><Kader /></PageTransition>} />
               <Route path="struktur" element={<PageTransition><Struktur /></PageTransition>} />
+              <Route path="profil" element={<PageTransition><Profil /></PageTransition>} />
+              <Route path="korwil" element={<PageTransition><KorwilAdmin /></PageTransition>} />
               <Route path="pengaturan" element={<PageTransition><Pengaturan /></PageTransition>} />
             </Route>
             

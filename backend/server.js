@@ -3,6 +3,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
 
+dotenv.config({ path: path.join(__dirname, '.env') });
 dotenv.config();
 
 const app = express();
@@ -30,6 +31,7 @@ const pengurusRoutes = require('./src/routes/pengurusRoutes');
 const settingsRoutes = require('./src/routes/settingsRoutes');
 const messageRoutes = require('./src/routes/messageRoutes');
 const kaderRoutes = require('./src/routes/kaderRoutes');
+const korwilRoutes = require('./src/routes/korwilRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/news', newsRoutes);
@@ -45,15 +47,47 @@ app.use('/api/pengurus', pengurusRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/pesan', messageRoutes);
 app.use('/api/kader', kaderRoutes);
+app.use('/api/korwil', korwilRoutes);
+
+// Health and Diagnostic Route
+app.get('/api/health', async (req, res) => {
+  const pool = require('./config/db');
+  const hasDbUrl = Boolean(process.env.DATABASE_URL || process.env.SUPABASE_DB_URL);
+  let dbStatus = 'disconnected';
+  let dbError = null;
+  try {
+    const [result] = await pool.query('SELECT 1 as test');
+    dbStatus = 'connected';
+  } catch (err) {
+    dbError = err.message;
+  }
+
+  res.json({
+    status: 'ok',
+    isSupabase: pool.isSupabase,
+    hasDatabaseUrl: hasDbUrl,
+    dbStatus,
+    dbError
+  });
+});
 
 // Basic route
 app.get('/', (req, res) => {
   res.send('LISAN API is running...');
 });
 
+// Centralized Error Handler
+const errorHandler = require('./src/middleware/errorHandler');
+app.use(errorHandler);
+
 // Port
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+module.exports = app;
+

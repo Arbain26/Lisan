@@ -1,10 +1,22 @@
 import { useState, useMemo } from "react";
-import { Plus, Search, Edit2, Trash2, Loader2, Users, BookOpen, HeartHandshake, Laptop, Megaphone, Folder, Award, Shield, HelpCircle } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Loader2, Users, BookOpen, HeartHandshake, Laptop, Megaphone, Folder, Award, Shield, HelpCircle, Crown } from "lucide-react";
 import useCRUD from "../../hooks/useCRUD";
 import Modal from "../../components/ui/Modal";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 import EmptyState from "../../components/ui/EmptyState";
 import { getMediaUrl } from "../../services/mediaUrl";
+
+const isCoordinator = (jabatan = "") => {
+  const j = (jabatan || "").toLowerCase().trim();
+  return (
+    j.includes("koordinator") ||
+    j.includes("ketua") ||
+    j.includes("kepala") ||
+    j.includes("kabid") ||
+    j.includes("pimpinan") ||
+    j.includes("lead")
+  );
+};
 
 // Map available icon string names to components
 const iconMap = {
@@ -135,6 +147,11 @@ const Struktur = () => {
       jabatan: "",
       departemen_id: "",
       urutan: staff.length + 1,
+      kampus: "",
+      bio: "",
+      email: "",
+      instagram: "",
+      linkedin: "",
       imageFile: null
     });
     setIsModalOpen(true);
@@ -147,6 +164,11 @@ const Struktur = () => {
       jabatan: member.jabatan,
       departemen_id: member.departemen_id || "",
       urutan: member.urutan || 0,
+      kampus: member.kampus || "",
+      bio: member.bio || "",
+      email: member.email || "",
+      instagram: member.instagram || "",
+      linkedin: member.linkedin || "",
       imageFile: null
     });
     setIsModalOpen(true);
@@ -202,6 +224,11 @@ const Struktur = () => {
       payload.append("jabatan", staffFormData.jabatan);
       payload.append("departemen_id", staffFormData.departemen_id || "");
       payload.append("urutan", staffFormData.urutan);
+      payload.append("kampus", staffFormData.kampus || "");
+      payload.append("bio", staffFormData.bio || "");
+      payload.append("email", staffFormData.email || "");
+      payload.append("instagram", staffFormData.instagram || "");
+      payload.append("linkedin", staffFormData.linkedin || "");
       if (staffFormData.imageFile) {
         payload.append("image", staffFormData.imageFile);
       }
@@ -381,16 +408,35 @@ const Struktur = () => {
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 font-poppins font-medium text-gray-900">{item.nama}</td>
-                      <td className="px-6 py-4 text-sm font-inter text-gray-600">{item.jabatan}</td>
+                      <td className="px-6 py-4 font-poppins font-medium text-gray-900">
+                        <div className="flex flex-col">
+                          <span className="text-gray-900 font-semibold">{item.nama}</span>
+                          {!item.departemen_id ? (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary mt-0.5">
+                              <Shield size={12} /> Pengurus Inti
+                            </span>
+                          ) : isCoordinator(item.jabatan) ? (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 mt-0.5">
+                              <Crown size={12} className="text-amber-500" /> Koordinator Departemen
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 mt-0.5">
+                              <Users size={12} /> Anggota
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm font-inter">
+                        <span className="font-semibold text-gray-800">{item.jabatan}</span>
+                      </td>
                       <td className="px-6 py-4 text-sm font-inter">
                         {item.nama_departemen ? (
                           <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-primary/10 text-primary border border-primary/20">
                             {item.nama_departemen}
                           </span>
                         ) : (
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-500 border border-gray-200">
-                            Pengurus Harian (PH)
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-red-50 text-primary border border-red-200">
+                            Pengurus Inti
                           </span>
                         )}
                       </td>
@@ -514,27 +560,15 @@ const Struktur = () => {
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-sm font-inter font-medium text-gray-700">Jabatan</label>
-                <input
-                  type="text"
-                  required
-                  value={staffFormData.jabatan}
-                  onChange={(e) => setStaffFormData({ ...staffFormData, jabatan: e.target.value })}
-                  placeholder="Contoh: Ketua Umum, Kepala Departemen, Staff Ahli"
-                  className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-sm font-inter font-medium text-gray-700">Departemen / Divisi</label>
+                  <label className="text-sm font-inter font-medium text-gray-700">Lingkup Kepengurusan</label>
                   <select
                     value={staffFormData.departemen_id}
                     onChange={(e) => setStaffFormData({ ...staffFormData, departemen_id: e.target.value })}
-                    className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                    className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-inter font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                   >
-                    <option value="">Pengurus Harian (PH) / Inti</option>
+                    <option value="">Pengurus Inti</option>
                     {depts.map(dept => (
                       <option key={dept.id} value={dept.id}>{dept.nama}</option>
                     ))}
@@ -549,8 +583,129 @@ const Struktur = () => {
                     required
                     value={staffFormData.urutan}
                     onChange={(e) => setStaffFormData({ ...staffFormData, urutan: parseInt(e.target.value) || 0 })}
-                    placeholder="Semakin kecil tampil di atas"
+                    placeholder="Contoh: 1, 2, 3..."
                     className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  />
+                  <p className="text-[11px] text-gray-400 font-inter">
+                    {!staffFormData.departemen_id ? "Saran urutan: 1=Ketua, 2=Bendahara, 3=Sekretaris" : "Urutan di dalam departemen"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-inter font-medium text-gray-700">Jabatan Resmi</label>
+                <input
+                  type="text"
+                  required
+                  value={staffFormData.jabatan}
+                  onChange={(e) => setStaffFormData({ ...staffFormData, jabatan: e.target.value })}
+                  placeholder="Contoh: Ketua Umum, Bendahara Umum, Koordinator, dll."
+                  className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                />
+
+                {/* Preset Chips */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-1.5">
+                  <span className="text-[11px] text-gray-400 font-inter">Pilihan Cepat:</span>
+                  {!staffFormData.departemen_id ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setStaffFormData({ ...staffFormData, jabatan: "Ketua Umum", urutan: 1 })}
+                        className="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-primary border border-red-200/60 rounded-full text-xs font-semibold transition-colors"
+                      >
+                        Ketua Umum (Urutan 1)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setStaffFormData({ ...staffFormData, jabatan: "Bendahara Umum", urutan: 2 })}
+                        className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/60 rounded-full text-xs font-semibold transition-colors"
+                      >
+                        Bendahara Umum (Urutan 2)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setStaffFormData({ ...staffFormData, jabatan: "Sekretaris Umum", urutan: 3 })}
+                        className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200/60 rounded-full text-xs font-semibold transition-colors"
+                      >
+                        Sekretaris Umum (Urutan 3)
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setStaffFormData({ ...staffFormData, jabatan: "Koordinator", urutan: 1 })}
+                        className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200/60 rounded-full text-xs font-bold transition-colors"
+                      >
+                        Koordinator
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setStaffFormData({ ...staffFormData, jabatan: "Anggota", urutan: 2 })}
+                        className="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 rounded-full text-xs font-medium transition-colors"
+                      >
+                        Anggota
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-inter font-medium text-gray-700">Asal Kampus / Institusi</label>
+                  <input
+                    type="text"
+                    value={staffFormData.kampus}
+                    onChange={(e) => setStaffFormData({ ...staffFormData, kampus: e.target.value })}
+                    placeholder="Contoh: Universitas Hasanuddin, UIN, dll."
+                    className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-sm font-inter font-medium text-gray-700">Alamat Email</label>
+                  <input
+                    type="email"
+                    value={staffFormData.email}
+                    onChange={(e) => setStaffFormData({ ...staffFormData, email: e.target.value })}
+                    placeholder="nama@gmail.com"
+                    className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-inter font-medium text-gray-700">Bio Singkat / Kutipan Motto</label>
+                <textarea
+                  rows={2}
+                  value={staffFormData.bio}
+                  onChange={(e) => setStaffFormData({ ...staffFormData, bio: e.target.value })}
+                  placeholder="Ceritakan latar belakang singkat, visi perjuangan, atau kutipan pribadi pengurus..."
+                  className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-inter font-medium text-gray-700">Akun Instagram</label>
+                  <input
+                    type="text"
+                    value={staffFormData.instagram}
+                    onChange={(e) => setStaffFormData({ ...staffFormData, instagram: e.target.value })}
+                    placeholder="username atau link instagram"
+                    className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-sm font-inter font-medium text-gray-700">Akun LinkedIn</label>
+                  <input
+                    type="text"
+                    value={staffFormData.linkedin}
+                    onChange={(e) => setStaffFormData({ ...staffFormData, linkedin: e.target.value })}
+                    placeholder="username atau link linkedin"
+                    className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                   />
                 </div>
               </div>

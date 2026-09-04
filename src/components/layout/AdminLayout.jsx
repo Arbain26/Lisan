@@ -19,6 +19,8 @@ import {
   Bell,
   Search,
   MonitorPlay,
+  Building2,
+  MapPin,
 } from "lucide-react";
 
 const sidebarGroups = [
@@ -26,6 +28,14 @@ const sidebarGroups = [
     title: "Menu Utama",
     links: [
       { icon: LayoutDashboard, label: "Dashboard", path: "/admin/dashboard" },
+    ]
+  },
+  {
+    title: "Profil & Struktur",
+    links: [
+      { icon: Building2, label: "Kelola Profil", path: "/admin/profil" },
+      { icon: MapPin, label: "Koordinator Wilayah", path: "/admin/korwil" },
+      { icon: Users, label: "Struktur & Divisi", path: "/admin/struktur" },
     ]
   },
   {
@@ -49,7 +59,6 @@ const sidebarGroups = [
     links: [
       { icon: Users, label: "Data Relawan", path: "/admin/relawan" },
       { icon: Users, label: "Daftar Kader", path: "/admin/kader" },
-      { icon: Users, label: "Struktur & Divisi", path: "/admin/struktur" },
       { icon: MessageSquare, label: "Pesan Kontak", path: "/admin/pesan" },
     ]
   },
@@ -57,7 +66,7 @@ const sidebarGroups = [
     title: "Sistem",
     links: [
       { icon: MonitorPlay, label: "Kelola Slider", path: "/admin/hero" },
-      { icon: Settings, label: "Pengaturan Website", path: "/admin/pengaturan" },
+      { icon: Settings, label: "Pengaturan & Navbar", path: "/admin/pengaturan" },
     ]
   }
 ];

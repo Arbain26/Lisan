@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState } from "react";
 import { useInView, motion } from "framer-motion";
 import { stats } from "../../constants";
-import { Users, CalendarCheck, MapPin, HeartHandshake } from "lucide-react";
+import { Users, CalendarCheck, MapPin } from "lucide-react";
 
 const useCounter = (target, isInView, duration = 2000) => {
   const [count, setCount] = useState(0);
@@ -22,8 +22,7 @@ const useCounter = (target, isInView, duration = 2000) => {
 const icons = [
   <Users size={32} strokeWidth={1.5} />,
   <CalendarCheck size={32} strokeWidth={1.5} />,
-  <MapPin size={32} strokeWidth={1.5} />,
-  <HeartHandshake size={32} strokeWidth={1.5} />
+  <MapPin size={32} strokeWidth={1.5} />
 ];
 
 const StatsSection = () => {
@@ -107,30 +106,6 @@ const StatsSection = () => {
                 {useCounter(stats[2].value, isInView)}{stats[2].suffix}
               </h3>
               <p className="font-inter text-gray-500 font-medium">{stats[2].label}</p>
-            </div>
-          </motion.div>
-
-          {/* Card 4 - Dark */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay: 0.4 }}
-            className="lg:col-span-4 bg-dark rounded-[2rem] p-8 sm:p-10 text-white relative overflow-hidden group shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-8"
-          >
-            <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 2px 2px, rgba(255,255,255,0.8) 1px, transparent 0)", backgroundSize: "24px 24px" }} />
-            <div className="relative z-10 flex items-center gap-6">
-              <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/10 text-secondary">
-                {icons[3]}
-              </div>
-              <div>
-                <p className="font-inter text-gray-400 text-lg font-medium mb-1">{stats[3].label}</p>
-                <h3 className="font-poppins font-bold text-5xl sm:text-6xl text-white">
-                  {useCounter(stats[3].value, isInView)}{stats[3].suffix}
-                </h3>
-              </div>
-            </div>
-            <div className="relative z-10 hidden lg:block text-right max-w-sm">
-              <p className="font-inter text-gray-400 text-sm leading-relaxed">
-                Kami bangga telah menyentuh lebih dari seribu kehidupan. Bergabunglah bersama kami untuk meluaskan kebermanfaatan ini ke seluruh penjuru Nusantara.
-              </p>
             </div>
           </motion.div>
 

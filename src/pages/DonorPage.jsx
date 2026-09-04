@@ -2,24 +2,7 @@ import { motion } from "framer-motion";
 import { Heart, MapPin, Droplets, Calendar } from "lucide-react";
 import useFetch from "../hooks/useFetch";
 
-const PageHeader = ({ title, subtitle, badge }) => (
-  <div
-    className="relative py-32 flex items-center justify-center overflow-hidden"
-    style={{ background: "linear-gradient(135deg, #111827 0%, #1a0505 50%, #111827 100%)" }}
-  >
-    <div className="absolute inset-0 opacity-5" style={{ backgroundImage: "radial-gradient(circle at 2px 2px, rgba(245,158,11,0.5) 1px, transparent 0)", backgroundSize: "32px 32px" }} />
-    <div className="relative z-10 text-center max-w-3xl mx-auto px-4">
-      {badge && (
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-5" style={{ background: "rgba(245,158,11,0.15)", border: "1px solid rgba(245,158,11,0.3)" }}>
-          <span className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
-          <span className="text-secondary text-xs font-inter font-semibold uppercase tracking-widest">{badge}</span>
-        </div>
-      )}
-      <h1 className="font-poppins font-bold text-4xl sm:text-6xl text-white mb-4">{title}</h1>
-      {subtitle && <p className="text-gray-400 font-inter text-lg">{subtitle}</p>}
-    </div>
-  </div>
-);
+import PageHeader from "../components/ui/PageHeader";
 
 const DonorPage = () => {
   const { data: donors, loading } = useFetch("/community/donors");

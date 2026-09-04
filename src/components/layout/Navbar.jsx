@@ -3,6 +3,69 @@ import { Link, NavLink, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ChevronDown, ArrowRight } from "lucide-react";
 import { navLinks } from "../../constants";
+import api from "../../services/api";
+
+const filterNavLinks = (rawLinks, visibility) => {
+  if (!visibility || Object.keys(visibility).length === 0) return rawLinks;
+
+  return rawLinks
+    .map((link) => {
+      // 1. Beranda
+      if (link.path === "/" && visibility.beranda === false) return null;
+
+      // 2. Lingkar Donor
+      if ((link.path === "/donor" || link.label === "Lingkar Donor") && visibility.donor === false) {
+        return null;
+      }
+
+      // 3. Kontak
+      if (link.path === "/contact" && visibility.contact === false) return null;
+
+      // 4. Menu dengan dropdown / children
+      if (link.children) {
+        // Cek apakah menu induk dimatikan
+        if (link.label === "Profil" && visibility.profil === false) return null;
+        if (link.label === "Organisasi" && visibility.organisasi === false) return null;
+        if (link.label === "Program" && visibility.program === false) return null;
+        if (link.label === "Media" && visibility.media === false) return null;
+
+        // Filter submenu / children
+        const filteredChildren = link.children.filter((child) => {
+          // Profil children
+          if (child.path === "/about" && visibility.profil_about === false) return false;
+          if (child.path === "/sejarah" && visibility.profil_sejarah === false) return false;
+          if (child.path === "/visi-misi" && visibility.profil_visi_misi === false) return false;
+          if (child.path === "/nilai-organisasi" && visibility.profil_nilai === false) return false;
+
+          // Organisasi children
+          if (child.path === "/structure" && visibility.org_structure === false) return false;
+          if (child.path === "/departemen" && visibility.org_departemen === false) return false;
+          if (child.path === "/koordinator-wilayah" && visibility.org_korwil === false) return false;
+
+          // Program children
+          if (child.path.includes("kajian") && visibility.program_kajian === false) return false;
+          if (child.path.includes("sosial") && visibility.program_sosial === false) return false;
+          if (child.path.includes("leadership") && visibility.program_leadership === false) return false;
+
+          // Media children
+          if ((child.path === "/news" || child.path.includes("artikel")) && visibility.media_news === false) return false;
+          if ((child.path === "/gallery" || child.path.includes("video")) && visibility.media_gallery === false) return false;
+
+          return true;
+        });
+
+        if (filteredChildren.length === 0) return null;
+
+        return {
+          ...link,
+          children: filteredChildren,
+        };
+      }
+
+      return link;
+    })
+    .filter(Boolean);
+};
 
 // ─── Animation Variants ──────────────────────────────────────────────────────
 
@@ -312,7 +375,25 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [menuVisibility, setMenuVisibility] = useState(null);
   const location = useLocation();
+
+  // Fetch visibility settings from database
+  useEffect(() => {
+    const fetchVisibility = async () => {
+      try {
+        const response = await api.get("/settings");
+        if (response.data && response.data.menu_visibility) {
+          setMenuVisibility(response.data.menu_visibility);
+        }
+      } catch (err) {
+        console.error("Gagal memuat pengaturan menu navbar:", err);
+      }
+    };
+    fetchVisibility();
+  }, [location.pathname]);
+
+  const activeNavLinks = filterNavLinks(navLinks, menuVisibility);
 
   // Scroll watcher
   useEffect(() => {
@@ -378,7 +459,7 @@ const Navbar = () => {
               role="navigation"
               aria-label="Main navigation"
             >
-              {navLinks.map((link) => (
+              {activeNavLinks.map((link) => (
                 <DesktopNavItem
                   key={link.label}
                   link={link}
@@ -387,24 +468,13 @@ const Navbar = () => {
               ))}
             </nav>
 
-            {/* Right: Actions & Mobile Toggle */}
-            <div className="flex items-center gap-3">
-              <Link
-                to="/login"
-                className={`hidden lg:flex items-center justify-center px-5 py-2 rounded-full font-poppins font-semibold text-sm transition-all duration-300 border ${scrolled
-                    ? "border-primary text-primary hover:bg-primary hover:text-white"
-                    : "border-white/40 text-white hover:bg-white hover:text-primary"
-                  }`}
-              >
-                Login Admin
-              </Link>
-
-              {/* Mobile hamburger */}
+            {/* Mobile Toggle */}
+            <div className="flex lg:hidden items-center">
               <button
                 onClick={() => setMobileOpen(!mobileOpen)}
                 aria-label={mobileOpen ? "Close menu" : "Open menu"}
                 aria-expanded={mobileOpen}
-                className={`lg:hidden flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 ${scrolled
+                className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 ${scrolled
                   ? "text-gray-700 hover:bg-gray-100"
                   : "text-white hover:bg-white/15"
                   }`}
@@ -422,6 +492,7 @@ const Navbar = () => {
                 </AnimatePresence>
               </button>
             </div>
+
 
           </div>
         </div>
@@ -498,7 +569,7 @@ const Navbar = () => {
 
             {/* Drawer Nav Links */}
             <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
-              {navLinks.map((link) => (
+              {activeNavLinks.map((link) => (
                 <MobileAccordionItem
                   key={link.label}
                   link={link}
@@ -509,13 +580,6 @@ const Navbar = () => {
 
             {/* Drawer Footer */}
             <div className="px-5 py-4 border-t border-gray-100 flex flex-col gap-3" style={{ background: "#fafafa" }}>
-              <Link
-                to="/login"
-                onClick={() => setMobileOpen(false)}
-                className="w-full py-2.5 flex items-center justify-center rounded-xl font-poppins font-medium text-sm border border-primary text-primary hover:bg-primary hover:text-white transition-colors"
-              >
-                Login Admin
-              </Link>
               <p className="text-center text-xs text-gray-400 font-inter leading-relaxed">
                 Bersama LISAN, jadilah bagian dari perubahan.
               </p>

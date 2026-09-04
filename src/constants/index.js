@@ -10,25 +10,21 @@ export const navLinks = [
         label: "Tentang LISAN",
         path: "/about",
         desc: "Kenali identitas dan perjalanan organisasi",
-        icon: "🏛️",
       },
       {
         label: "Sejarah",
         path: "/sejarah",
         desc: "Rekam jejak berdirinya LISAN",
-        icon: "📜",
       },
       {
         label: "Visi & Misi",
         path: "/visi-misi",
         desc: "Arah dan tujuan perjuangan kami",
-        icon: "🎯",
       },
       {
         label: "Nilai Organisasi",
         path: "/nilai-organisasi",
         desc: "Prinsip yang menjadi fondasi gerak kami",
-        icon: "⚖️",
       },
     ],
   },
@@ -39,19 +35,16 @@ export const navLinks = [
         label: "Struktur Pengurus",
         path: "/structure",
         desc: "Susunan kepengurusan LISAN aktif",
-        icon: "👥",
       },
       {
         label: "Departemen / Bidang",
         path: "/departemen",
         desc: "Divisi dan unit kerja organisasi",
-        icon: "🗂️",
       },
       {
         label: "Koordinator Wilayah",
         path: "/koordinator-wilayah",
         desc: "Perwakilan LISAN di setiap daerah",
-        icon: "🗺️",
       },
     ],
   },
@@ -62,19 +55,16 @@ export const navLinks = [
         label: "Kajian Islam",
         path: "/programs#kajian",
         desc: "Forum ilmu dan diskusi keislaman",
-        icon: "📖",
       },
       {
         label: "Aksi Sosial",
         path: "/programs#sosial",
         desc: "Gerakan kepedulian untuk masyarakat",
-        icon: "🤝",
       },
       {
         label: "Pelatihan Kepemimpinan",
         path: "/programs#leadership",
         desc: "Kaderisasi pemimpin masa depan",
-        icon: "🎓",
       },
     ],
   },
@@ -85,19 +75,16 @@ export const navLinks = [
         label: "Tentang Donor",
         path: "/donor",
         desc: "Program donor darah Sidrap",
-        icon: "🩸",
       },
       {
         label: "Daftar Relawan",
         path: "/donor#relawan",
         desc: "Bergabung sebagai pendonor aktif",
-        icon: "❤️",
       },
       {
         label: "Dokumentasi Kegiatan",
         path: "/donor#dokumentasi",
         desc: "Galeri kegiatan donor LISAN",
-        icon: "📷",
       },
     ],
   },
@@ -108,25 +95,21 @@ export const navLinks = [
         label: "Berita",
         path: "/news",
         desc: "Informasi terkini dari LISAN",
-        icon: "📰",
       },
       {
         label: "Artikel",
         path: "/news#artikel",
         desc: "Tulisan intelektual anggota LISAN",
-        icon: "✍️",
       },
       {
         label: "Galeri Foto",
         path: "/gallery",
         desc: "Dokumentasi foto kegiatan kami",
-        icon: "🖼️",
       },
       {
         label: "Video Kegiatan",
         path: "/gallery#video",
         desc: "Liputan video program LISAN",
-        icon: "🎥",
       },
     ],
   },
@@ -145,28 +128,24 @@ export const stats = [
 
 export const programs = [
   {
-    icon: "🎓",
     title: "Leadership Training",
     description:
       "Intensive leadership development programs to cultivate the next generation of principled and visionary leaders in Indonesia.",
     color: "from-primary to-red-700",
   },
   {
-    icon: "📖",
     title: "Kajian Islam",
     description:
       "Regular Islamic studies and discussions that deepen understanding of faith, ethics, and its role in modern society.",
     color: "from-amber-500 to-secondary",
   },
   {
-    icon: "🤝",
     title: "Social Movement",
     description:
       "Community-driven initiatives addressing real social problems through empowerment, education, and solidarity.",
     color: "from-emerald-600 to-teal-500",
   },
   {
-    icon: "🩸",
     title: "Lingkar Donor Sidrap",
     description:
       "A dedicated blood donor network serving the Sidenreng Rappang community with regular drives and emergency response.",
