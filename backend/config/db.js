@@ -6,19 +6,30 @@ dotenv.config();
 let databaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_DB_URL;
 
 // Auto-fix IPv6 direct connection to IPv4 Connection Pooler (prevents getaddrinfo ENOTFOUND)
-if (databaseUrl && databaseUrl.includes('db.jmkmjmbginnafclfpbjp.supabase.co')) {
-  databaseUrl = databaseUrl.replace('db.jmkmjmbginnafclfpbjp.supabase.co', 'aws-0-ap-northeast-1.pooler.supabase.com');
-  if (databaseUrl.includes('://postgres:')) {
-    databaseUrl = databaseUrl.replace('://postgres:', '://postgres.jmkmjmbginnafclfpbjp:');
+if (databaseUrl) {
+  // Normalize project ID typo (L vs I)
+  databaseUrl = databaseUrl.replace('jmkmjmbginnafclfpbjp', 'jmkmjmbglnnafclfpbjp');
+  
+  if (databaseUrl.includes('db.jmkmjmbglnnafclfpbjp.supabase.co')) {
+    databaseUrl = databaseUrl.replace('db.jmkmjmbglnnafclfpbjp.supabase.co', 'aws-0-ap-northeast-1.pooler.supabase.com');
+    if (databaseUrl.includes(':5432')) {
+      databaseUrl = databaseUrl.replace(':5432', ':6543');
+    }
   }
-  if (databaseUrl.includes(':5432')) {
-    databaseUrl = databaseUrl.replace(':5432', ':6543');
+
+  // Ensure correct username format postgres.jmkmjmbglnnafclfpbjp
+  if (databaseUrl.includes('aws-0-ap-northeast-1.pooler.supabase.com')) {
+    if (databaseUrl.includes('://admin@lisan.id:') || databaseUrl.includes('://postgres:')) {
+      databaseUrl = databaseUrl.replace(/:\/\/[^:]+:/, '://postgres.jmkmjmbglnnafclfpbjp:');
+    }
+    // Remove accidental brackets around password
+    databaseUrl = databaseUrl.replace(/:\/\/([^:]+):\[([^\]]+)\]@/, '://$1:$2@');
   }
 }
 
 let pool;
 
-if (databaseUrl) {
+if (databaseUrl && !databaseUrl.includes('[PASSWORD_ANDA]') && !databaseUrl.includes('[YOUR-PASSWORD]')) {
   // ==============================================================================
   // SUPABASE / POSTGRESQL MODE
   // ==============================================================================
