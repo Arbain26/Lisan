@@ -80,25 +80,17 @@ const Proker = () => {
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      // 1. Fetch Proker list
-      const prokerRes = await api.get("/proker", {
-        params: { status: statusFilter, tahun: selectedYear }
-      });
-      setProkers(prokerRes.data);
+      const [prokerRes, dashRes, notifRes, filesRes] = await Promise.all([
+        api.get("/proker", { params: { status: statusFilter, tahun: selectedYear } }),
+        api.get("/proker/dashboard", { params: { tahun: selectedYear } }),
+        api.get("/proker/notifications"),
+        api.get("/proker/files")
+      ]);
 
-      // 2. Fetch dashboard stats
-      const dashRes = await api.get("/proker/dashboard", {
-        params: { tahun: selectedYear }
-      });
-      setDashboardData(dashRes.data);
-
-      // 3. Fetch notifications
-      const notifRes = await api.get("/proker/notifications");
-      setNotifications(notifRes.data);
-
-      // 4. Fetch uploaded Excel files history
-      const filesRes = await api.get("/proker/files");
-      setUploadedFiles(filesRes.data);
+      if (prokerRes?.data) setProkers(prokerRes.data);
+      if (dashRes?.data) setDashboardData(dashRes.data);
+      if (notifRes?.data) setNotifications(notifRes.data);
+      if (filesRes?.data) setUploadedFiles(filesRes.data);
     } catch (error) {
       console.error("Error fetching proker data:", error);
       toast.error("Gagal mengambil data Program Kerja");

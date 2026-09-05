@@ -44,3 +44,16 @@ exports.login = async (req, res) => {
     res.status(500).json({ message: 'Server error during login' });
   }
 };
+
+exports.getMe = async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT id, name, email, role FROM users WHERE id = ?', [req.user.id]);
+    if (rows.length === 0) {
+      return res.status(401).json({ message: 'User tidak ditemukan' });
+    }
+    res.json({ user: rows[0] });
+  } catch (error) {
+    console.error('Error in getMe:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

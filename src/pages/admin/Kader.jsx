@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, Search, Edit2, Trash2, Download, Upload, FileSpreadsheet, Loader2, Users, GraduationCap, School, BookOpen } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Download, Upload, FileSpreadsheet, Loader2, Users, GraduationCap, School, BookOpen, X } from "lucide-react";
 import useCRUD from "../../hooks/useCRUD";
 import Modal from "../../components/ui/Modal";
 import ConfirmModal from "../../components/ui/ConfirmModal";
@@ -28,6 +28,7 @@ const Kader = () => {
   const [isModalOpen, setIsModalOpen]           = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedItem, setSelectedItem]         = useState(null);
+  const [isImporting, setIsImporting]           = useState(false);
 
   const emptyForm = { nama: "", angkatan: "", kampus: "", alamat: "", jenjang_kaderisasi: "", semester: "", status: "" };
   const [formData, setFormData] = useState(emptyForm);
@@ -59,6 +60,7 @@ const Kader = () => {
         (item.nama || '').toLowerCase().includes(q) ||
         (item.kampus || '').toLowerCase().includes(q) ||
         (item.angkatan || '').toLowerCase().includes(q) ||
+        (item.alamat || '').toLowerCase().includes(q) ||
         (item.jenjang_kaderisasi || '').toLowerCase().includes(q);
       const matchAngkatan = !filterAngkatan || item.angkatan === filterAngkatan;
       const matchJenjang  = !filterJenjang  || item.jenjang_kaderisasi === filterJenjang;
@@ -96,6 +98,7 @@ const Kader = () => {
     const file = e.target.files[0];
     if (!file) return;
 
+    setIsImporting(true);
     const reader = new FileReader();
     reader.onload = async (evt) => {
       try {
@@ -202,8 +205,15 @@ const Kader = () => {
         console.error('Error import Excel:', error);
         const msg = error.response?.data?.message || error.message || 'Gagal mengimpor file. Pastikan format sesuai.';
         toast.error(msg);
+      } finally {
+        setIsImporting(false);
+        e.target.value = '';
       }
+    };
+    reader.onerror = () => {
+      setIsImporting(false);
       e.target.value = '';
+      toast.error('Gagal membaca file Excel');
     };
     reader.readAsBinaryString(file);
   };
@@ -305,82 +315,99 @@ const Kader = () => {
           <h1 className="text-2xl font-poppins font-bold text-gray-900">Database Kader</h1>
           <p className="text-sm font-inter text-gray-500 mt-1">Kelola data pembinaan kader LISAN secara manual atau via Excel</p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <button 
             onClick={handleDownloadTemplate} 
-            className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-3.5 py-2.5 rounded-xl font-inter font-medium text-sm transition-colors"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-3.5 py-2.5 rounded-xl font-inter font-medium text-xs sm:text-sm transition-colors"
             title="Unduh format template Excel kader"
           >
-            <FileSpreadsheet size={17} className="text-gray-500" /> Template Excel
+            <FileSpreadsheet size={16} className="text-gray-500" /> Template
           </button>
           <button 
             onClick={handleExportExcel} 
-            className="flex items-center gap-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-3.5 py-2.5 rounded-xl font-inter font-medium text-sm transition-colors"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-3.5 py-2.5 rounded-xl font-inter font-medium text-xs sm:text-sm transition-colors"
             title="Unduh seluruh data kader ke file Excel"
           >
-            <Download size={17} className="text-emerald-600" /> Unduh Data Excel
+            <Download size={16} className="text-emerald-600" /> Ekspor
           </button>
-          <label className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-3.5 py-2.5 rounded-xl font-inter font-medium text-sm transition-colors cursor-pointer">
-            <Upload size={17} className="text-gray-500" /> Import Excel
-            <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleFileUpload} />
+          <label className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-3.5 py-2.5 rounded-xl font-inter font-medium text-xs sm:text-sm transition-colors cursor-pointer">
+            <Upload size={16} className="text-gray-500" /> Impor
+            <input type="file" accept=".xlsx,.xls,.csv" className="hidden" disabled={isImporting} onChange={handleFileUpload} />
           </label>
-          <button onClick={handleOpenAdd} className="flex items-center gap-2 bg-primary hover:bg-red-800 text-white px-4 py-2.5 rounded-xl font-inter font-medium text-sm transition-colors shadow-sm shadow-primary/20 shrink-0">
+          <button onClick={handleOpenAdd} className="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary hover:bg-red-800 text-white px-4 py-2.5 rounded-xl font-inter font-medium text-sm transition-colors shadow-sm shadow-primary/20 shrink-0">
             <Plus size={17} /> Tambah Kader
           </button>
         </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
-          <div className="p-3.5 bg-blue-50 text-blue-600 rounded-xl"><Users size={24} /></div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-3 sm:gap-4">
+          <div className="p-2.5 sm:p-3.5 bg-blue-50 text-blue-600 rounded-xl"><Users size={20} className="sm:w-6 sm:h-6" /></div>
           <div>
-            <p className="text-xs text-gray-400 font-inter font-bold uppercase tracking-wider">Total Kader</p>
-            <h3 className="text-2xl font-poppins font-extrabold text-gray-800 mt-0.5">{stats.total}</h3>
+            <p className="text-[10px] sm:text-xs text-gray-400 font-inter font-bold uppercase tracking-wider">Total Kader</p>
+            <h3 className="text-xl sm:text-2xl font-poppins font-extrabold text-gray-800 mt-0.5">{stats.total}</h3>
           </div>
         </div>
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
-          <div className="p-3.5 bg-emerald-50 text-emerald-600 rounded-xl"><School size={24} /></div>
+        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-3 sm:gap-4">
+          <div className="p-2.5 sm:p-3.5 bg-emerald-50 text-emerald-600 rounded-xl"><School size={20} className="sm:w-6 sm:h-6" /></div>
           <div>
-            <p className="text-xs text-gray-400 font-inter font-bold uppercase tracking-wider">Kampus</p>
-            <h3 className="text-2xl font-poppins font-extrabold text-gray-800 mt-0.5">{stats.uniqueKampus}</h3>
+            <p className="text-[10px] sm:text-xs text-gray-400 font-inter font-bold uppercase tracking-wider">Kampus</p>
+            <h3 className="text-xl sm:text-2xl font-poppins font-extrabold text-gray-800 mt-0.5">{stats.uniqueKampus}</h3>
           </div>
         </div>
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
-          <div className="p-3.5 bg-purple-50 text-purple-600 rounded-xl"><GraduationCap size={24} /></div>
+        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-3 sm:gap-4">
+          <div className="p-2.5 sm:p-3.5 bg-purple-50 text-purple-600 rounded-xl"><GraduationCap size={20} className="sm:w-6 sm:h-6" /></div>
           <div>
-            <p className="text-xs text-gray-400 font-inter font-bold uppercase tracking-wider">Total Angkatan</p>
-            <h3 className="text-2xl font-poppins font-extrabold text-gray-800 mt-0.5">{stats.uniqueAngkatan}</h3>
+            <p className="text-[10px] sm:text-xs text-gray-400 font-inter font-bold uppercase tracking-wider">Angkatan</p>
+            <h3 className="text-xl sm:text-2xl font-poppins font-extrabold text-gray-800 mt-0.5">{stats.uniqueAngkatan}</h3>
           </div>
         </div>
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
-          <div className="p-3.5 bg-amber-50 text-amber-600 rounded-xl"><BookOpen size={24} /></div>
+        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-3 sm:gap-4">
+          <div className="p-2.5 sm:p-3.5 bg-amber-50 text-amber-600 rounded-xl"><BookOpen size={20} className="sm:w-6 sm:h-6" /></div>
           <div>
-            <p className="text-xs text-gray-400 font-inter font-bold uppercase tracking-wider">Jenjang</p>
-            <h3 className="text-2xl font-poppins font-extrabold text-gray-800 mt-0.5">{stats.uniqueJenjang}</h3>
+            <p className="text-[10px] sm:text-xs text-gray-400 font-inter font-bold uppercase tracking-wider">Jenjang</p>
+            <h3 className="text-xl sm:text-2xl font-poppins font-extrabold text-gray-800 mt-0.5">{stats.uniqueJenjang}</h3>
           </div>
         </div>
       </div>
 
       {/* Filter & Search */}
-      <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4">
+      <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-3 sm:gap-4">
         <div className="relative flex-1">
           <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input type="text" placeholder="Cari nama, kampus, angkatan, atau jenjang..."
+          <input type="text" placeholder="Cari nama, kampus, angkatan, atau alamat..."
             value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+            className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-10 py-2.5 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+          {searchTerm && (
+            <button 
+              onClick={() => setSearchTerm("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 rounded-full"
+              title="Hapus pencarian"
+            >
+              <X size={14} />
+            </button>
+          )}
         </div>
-        <div className="flex flex-wrap sm:flex-nowrap gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:flex gap-3 w-full md:w-auto">
           <select value={filterAngkatan} onChange={(e) => setFilterAngkatan(e.target.value)}
-            className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all sm:min-w-[160px] font-semibold text-gray-700">
+            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all md:min-w-[160px] font-semibold text-gray-700">
             <option value="">Semua Angkatan</option>
             {uniqueAngkatan.map(a => <option key={a} value={a}>{a}</option>)}
           </select>
           <select value={filterJenjang} onChange={(e) => setFilterJenjang(e.target.value)}
-            className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all sm:min-w-[180px] font-semibold text-gray-700">
+            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all md:min-w-[180px] font-semibold text-gray-700">
             <option value="">Semua Jenjang</option>
             {uniqueJenjang.map(j => <option key={j} value={j}>{j}</option>)}
           </select>
+          {(searchTerm || filterAngkatan || filterJenjang) && (
+            <button 
+              onClick={() => { setSearchTerm(""); setFilterAngkatan(""); setFilterJenjang(""); }}
+              className="px-3.5 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-100 text-xs font-inter font-medium transition-colors"
+            >
+              Reset
+            </button>
+          )}
         </div>
       </div>
 
@@ -398,23 +425,23 @@ const Kader = () => {
           />
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-gray-50 border-b border-gray-100 text-gray-400 font-inter font-semibold text-xs uppercase tracking-wider">
-                    <th className="px-6 py-4 text-center w-12">No</th>
-                    <th className="px-6 py-4">Nama Lengkap</th>
-                    <th className="px-6 py-4">Angkatan</th>
-                    <th className="px-6 py-4">Kampus</th>
-                    <th className="px-6 py-4">Jenjang Kaderisasi</th>
-                    <th className="px-6 py-4">Semester</th>
-                    <th className="px-6 py-4 text-right">Aksi</th>
+            <div className="max-h-[calc(100vh-270px)] overflow-y-auto overflow-x-auto relative">
+              <table className="w-full text-left border-collapse min-w-[760px]">
+                <thead className="sticky top-0 z-20 bg-gray-50/95 backdrop-blur shadow-sm">
+                  <tr className="border-b border-gray-200">
+                    <th className="sticky top-0 z-20 bg-gray-50/95 backdrop-blur px-4 py-4 font-inter font-semibold text-xs text-gray-600 uppercase tracking-wider text-center w-12">No</th>
+                    <th className="sticky top-0 z-20 bg-gray-50/95 backdrop-blur px-6 py-4 font-inter font-semibold text-xs text-gray-600 uppercase tracking-wider">Nama Lengkap</th>
+                    <th className="sticky top-0 z-20 bg-gray-50/95 backdrop-blur px-6 py-4 font-inter font-semibold text-xs text-gray-600 uppercase tracking-wider">Angkatan</th>
+                    <th className="sticky top-0 z-20 bg-gray-50/95 backdrop-blur px-6 py-4 font-inter font-semibold text-xs text-gray-600 uppercase tracking-wider">Kampus</th>
+                    <th className="sticky top-0 z-20 bg-gray-50/95 backdrop-blur px-6 py-4 font-inter font-semibold text-xs text-gray-600 uppercase tracking-wider">Jenjang Kaderisasi</th>
+                    <th className="sticky top-0 z-20 bg-gray-50/95 backdrop-blur px-6 py-4 font-inter font-semibold text-xs text-gray-600 uppercase tracking-wider">Semester</th>
+                    <th className="sticky top-0 z-20 bg-gray-50/95 backdrop-blur px-6 py-4 font-inter font-semibold text-xs text-gray-600 uppercase tracking-wider text-right">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 font-inter text-sm">
                   {filteredData.map((item, index) => (
-                    <tr key={item.id} className="hover:bg-gray-50/50 transition-colors group">
-                      <td className="px-6 py-4 text-center text-gray-500 font-medium">{index + 1}</td>
+                    <tr key={item.id} className="hover:bg-gray-50/60 transition-colors group">
+                      <td className="px-4 py-4 text-center text-gray-500 font-medium">{index + 1}</td>
                       <td className="px-6 py-4 font-poppins font-bold text-gray-900">{item.nama}</td>
                       <td className="px-6 py-4">
                         <span className="bg-purple-50 text-purple-700 px-2.5 py-0.5 rounded-full font-bold text-xs">{item.angkatan}</span>
@@ -429,11 +456,11 @@ const Kader = () => {
                         <span className="bg-blue-50 text-blue-700 px-2.5 py-0.5 rounded-full font-bold text-xs">Sem. {item.semester || '-'}</span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => handleOpenEdit(item)} className="p-2 text-gray-400 hover:text-secondary hover:bg-amber-50 rounded-lg transition-colors border border-transparent hover:border-amber-200">
+                        <div className="flex items-center justify-end gap-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                          <button onClick={() => handleOpenEdit(item)} className="p-2 text-gray-400 hover:text-secondary hover:bg-amber-50 rounded-lg transition-colors border border-transparent hover:border-amber-200" title="Edit Kader">
                             <Edit2 size={16} />
                           </button>
-                          <button onClick={() => handleOpenDelete(item)} className="p-2 text-gray-400 hover:text-primary hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200">
+                          <button onClick={() => handleOpenDelete(item)} className="p-2 text-gray-400 hover:text-primary hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200" title="Hapus Kader">
                             <Trash2 size={16} />
                           </button>
                         </div>
@@ -452,13 +479,13 @@ const Kader = () => {
 
       {/* CRUD Modal */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={selectedItem ? "Edit Data Kader" : "Tambah Kader Baru"}>
-        <form onSubmit={handleSubmit} className="space-y-4 font-semibold">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-sm font-inter font-medium text-gray-700">Nama Lengkap <span className="text-red-500">*</span></label>
             <input type="text" required value={formData.nama} onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
               className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-semibold" />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="text-sm font-inter font-medium text-gray-700">Angkatan <span className="text-red-500">*</span></label>
               <input type="text" required placeholder="Cth: LIS 5" value={formData.angkatan}
@@ -472,7 +499,7 @@ const Kader = () => {
                 className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-semibold" />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="text-sm font-inter font-medium text-gray-700">Jenjang Kaderisasi</label>
               <select value={formData.jenjang_kaderisasi} onChange={(e) => setFormData({ ...formData, jenjang_kaderisasi: e.target.value })}
@@ -522,6 +549,19 @@ const Kader = () => {
         title="Hapus Data Kader?"
         message={`Apakah Anda yakin ingin menghapus data kader "${selectedItem?.nama}"? Tindakan ini tidak dapat dibatalkan.`}
       />
+
+      {/* Excel Import Loading Overlay */}
+      {isImporting && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white p-6 rounded-2xl shadow-xl flex flex-col items-center gap-3 text-center max-w-sm">
+            <Loader2 className="w-9 h-9 text-primary animate-spin" />
+            <h4 className="font-poppins font-bold text-gray-800 text-base">Mengimpor Data Kader</h4>
+            <p className="text-xs font-inter text-gray-500">
+              Sedang membaca dan memvalidasi file Excel. Mohon tunggu beberapa saat...
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

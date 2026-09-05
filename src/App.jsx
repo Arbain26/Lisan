@@ -39,6 +39,7 @@ import HeroSlides from "./pages/admin/HeroSlides";
 import Struktur from "./pages/admin/Struktur";
 import Profil from "./pages/admin/Profil";
 import KorwilAdmin from "./pages/admin/Korwil";
+import Login from "./pages/auth/Login";
 
 // Providers
 import { ToastProvider } from "./components/ui/ToastProvider";
@@ -84,9 +85,9 @@ function App() {
               <Route path="/join" element={<PageTransition><JoinPage /></PageTransition>} />
             </Route>
 
-            {/* Auth Routes - Redirected to /admin */}
-            <Route path="/login" element={<Navigate to="/admin" replace />} />
-            <Route path="/admin/login" element={<Navigate to="/admin" replace />} />
+            {/* Auth Routes */}
+            <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
+            <Route path="/admin/login" element={<Navigate to="/login" replace />} />
 
             {/* Protected Admin Routes */}
             <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>

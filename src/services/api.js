@@ -20,4 +20,19 @@ api.interceptors.request.use(
   }
 );
 
+// Add a response interceptor to handle 401 Unauthorized
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('lisan_admin_token');
+      localStorage.removeItem('lisan_admin_user');
+      if (window.location.pathname.startsWith('/admin')) {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;

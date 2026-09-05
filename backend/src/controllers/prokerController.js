@@ -373,7 +373,7 @@ exports.uploadProker = async (req, res) => {
   }
 };
 
-// 3. Get all Prokers
+// 3. Get all Prokers (Optimized with Batch Query)
 exports.getAllProker = async (req, res) => {
   try {
     const { status, tahun } = req.query;
@@ -397,27 +397,43 @@ exports.getAllProker = async (req, res) => {
     query += ' ORDER BY created_at DESC';
 
     const [rows] = await pool.query(query, params);
+    if (!rows || rows.length === 0) {
+      return res.json([]);
+    }
 
-    // Fetch schedules for each proker
-    const prokers = [];
-    for (const r of rows) {
-      const [schedules] = await pool.query('SELECT * FROM proker_schedule WHERE proker_id = ?', [r.id]);
-      
-      // Calculate color indicator dynamically
-      const evaluation = await calculateColorAndHealth(r, schedules);
+    // Batch fetch all schedules in a single query
+    const prokerIds = rows.map(r => r.id);
+    const placeholders = prokerIds.map(() => '?').join(', ');
+    const [allSchedules] = await pool.query(
+      `SELECT * FROM proker_schedule WHERE proker_id IN (${placeholders}) ORDER BY id ASC`,
+      prokerIds
+    );
 
-      prokers.push({
+    // Group schedules by proker_id in memory
+    const schedulesByProker = {};
+    for (const s of allSchedules) {
+      if (!schedulesByProker[s.proker_id]) {
+        schedulesByProker[s.proker_id] = [];
+      }
+      schedulesByProker[s.proker_id].push(s);
+    }
+
+    const prokers = rows.map(r => {
+      const schedules = schedulesByProker[r.id] || [];
+      const evaluation = calculateColorAndHealth(r, schedules);
+
+      return {
         ...r,
         schedules,
         indicator: evaluation.indicator,
         pastTargetCount: evaluation.pastTargetCount,
         shouldBeCompletedCount: evaluation.shouldBeCompletedCount
-      });
-    }
+      };
+    });
 
     res.json(prokers);
   } catch (error) {
-    console.error(error);
+    console.error('Error fetching proker:', error);
     res.status(500).json({ message: 'Server Error' });
   }
 };
@@ -543,12 +559,9 @@ exports.updateScheduleStatus = async (req, res) => {
   }
 };
 
-// 5. Get Notifications
+// 5. Get Notifications (Fast query without heavy evaluation)
 exports.getNotifications = async (req, res) => {
   try {
-    // Run evaluation first to ensure latest warnings are generated
-    await evaluateAllProkers();
-
     const [rows] = await pool.query(`
       SELECT n.*, p.kegiatan, p.penanggung_jawab 
       FROM proker_notifications n 
@@ -581,12 +594,9 @@ exports.readNotification = async (req, res) => {
   }
 };
 
-// 7. Get Proker Dashboard metrics & chart data
+// 7. Get Proker Dashboard metrics & chart data (Optimized with Batch Query)
 exports.getProkerDashboard = async (req, res) => {
   try {
-    // Run evaluation first to ensure accuracy
-    await evaluateAllProkers();
-
     const { tahun } = req.query;
     let query = 'SELECT * FROM proker';
     const params = [];
@@ -612,29 +622,43 @@ exports.getProkerDashboard = async (req, res) => {
       monthlyActualMap[m] = 0;
     });
 
-    for (const r of rows) {
-      const [schedules] = await pool.query('SELECT * FROM proker_schedule WHERE proker_id = ?', [r.id]);
-      const evalRes = await calculateColorAndHealth(r, schedules);
-      
-      if (r.status === 'Selesai') {
-        completed++;
-      } else if (r.status === 'Belum Mulai') {
-        notStarted++;
-      } else if (r.status === 'Terlambat') {
-        delayed++;
-      } else {
-        running++;
-      }
+    if (rows.length > 0) {
+      // Batch fetch schedules for all prokers
+      const prokerIds = rows.map(r => r.id);
+      const placeholders = prokerIds.map(() => '?').join(', ');
+      const [allSchedules] = await pool.query(
+        `SELECT * FROM proker_schedule WHERE proker_id IN (${placeholders})`,
+        prokerIds
+      );
 
-      // Add to monthly data
-      schedules.forEach(s => {
+      // Group schedules by proker_id
+      const schedulesByProker = {};
+      for (const s of allSchedules) {
+        if (!schedulesByProker[s.proker_id]) {
+          schedulesByProker[s.proker_id] = [];
+        }
+        schedulesByProker[s.proker_id].push(s);
+
+        // Add to monthly data
         if (monthlyTargetMap[s.bulan] !== undefined) {
           monthlyTargetMap[s.bulan]++;
           if (s.status === 'Terlaksana') {
             monthlyActualMap[s.bulan]++;
           }
         }
-      });
+      }
+
+      for (const r of rows) {
+        if (r.status === 'Selesai') {
+          completed++;
+        } else if (r.status === 'Belum Mulai') {
+          notStarted++;
+        } else if (r.status === 'Terlambat') {
+          delayed++;
+        } else {
+          running++;
+        }
+      }
     }
 
     // Format chart data

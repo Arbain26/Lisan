@@ -314,28 +314,32 @@ const Relawan = () => {
           <EmptyState isSearch={searchTerm !== ""} message={searchTerm !== "" ? "Relawan tidak ditemukan" : "Belum ada data relawan"} subMessage={searchTerm !== "" ? `Tidak ada hasil untuk "${searchTerm}"` : "Mulai dengan menambahkan data relawan."} />
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-gray-50 border-b border-gray-100">
-                    <th className="px-4 py-4 font-inter font-semibold text-xs text-gray-500 uppercase tracking-wider text-center w-12">No</th>
-                    <th className="px-6 py-4 font-inter font-semibold text-xs text-gray-500 uppercase tracking-wider">Nama Lengkap</th>
-                    <th className="px-6 py-4 font-inter font-semibold text-xs text-gray-500 uppercase tracking-wider">Instansi/Kelas</th>
-                    <th className="px-6 py-4 font-inter font-semibold text-xs text-gray-500 uppercase tracking-wider">Daerah</th>
-                    <th className="px-6 py-4 font-inter font-semibold text-xs text-gray-500 uppercase tracking-wider">Gol. Darah</th>
-                    <th className="px-6 py-4 font-inter font-semibold text-xs text-gray-500 uppercase tracking-wider">No HP</th>
-                    <th className="px-6 py-4 font-inter font-semibold text-xs text-gray-500 uppercase tracking-wider">Keterangan</th>
-                    <th className="px-6 py-4 font-inter font-semibold text-xs text-gray-500 uppercase tracking-wider text-right">Aksi</th>
+            <div className="max-h-[calc(100vh-270px)] overflow-y-auto overflow-x-auto relative">
+              <table className="w-full text-left border-collapse min-w-[760px]">
+                <thead className="sticky top-0 z-20 bg-gray-50/95 backdrop-blur shadow-sm">
+                  <tr className="border-b border-gray-200">
+                    <th className="sticky top-0 z-20 bg-gray-50/95 backdrop-blur px-4 py-4 font-inter font-semibold text-xs text-gray-600 uppercase tracking-wider text-center w-12">No</th>
+                    <th className="sticky top-0 z-20 bg-gray-50/95 backdrop-blur px-6 py-4 font-inter font-semibold text-xs text-gray-600 uppercase tracking-wider">Nama Lengkap</th>
+                    <th className="sticky top-0 z-20 bg-gray-50/95 backdrop-blur px-6 py-4 font-inter font-semibold text-xs text-gray-600 uppercase tracking-wider">Instansi/Kelas</th>
+                    <th className="sticky top-0 z-20 bg-gray-50/95 backdrop-blur px-6 py-4 font-inter font-semibold text-xs text-gray-600 uppercase tracking-wider">Daerah</th>
+                    <th className="sticky top-0 z-20 bg-gray-50/95 backdrop-blur px-6 py-4 font-inter font-semibold text-xs text-gray-600 uppercase tracking-wider">Gol. Darah</th>
+                    <th className="sticky top-0 z-20 bg-gray-50/95 backdrop-blur px-6 py-4 font-inter font-semibold text-xs text-gray-600 uppercase tracking-wider">No HP</th>
+                    <th className="sticky top-0 z-20 bg-gray-50/95 backdrop-blur px-6 py-4 font-inter font-semibold text-xs text-gray-600 uppercase tracking-wider">Keterangan</th>
+                    <th className="sticky top-0 z-20 bg-gray-50/95 backdrop-blur px-6 py-4 font-inter font-semibold text-xs text-gray-600 uppercase tracking-wider text-right">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {filteredData.map((item, index) => (
-                    <tr key={item.id} className="hover:bg-gray-50/50 transition-colors group">
+                    <tr key={item.id} className="hover:bg-gray-50/60 transition-colors group">
                       <td className="px-4 py-4 text-sm font-inter text-gray-500 text-center">{index + 1}</td>
                       <td className="px-6 py-4 font-poppins font-medium text-gray-900">{item.nama}</td>
                       <td className="px-6 py-4 text-sm font-inter text-gray-600">{item.instansi}</td>
                       <td className="px-6 py-4 text-sm font-inter text-gray-600">{item.daerah}</td>
-                      <td className="px-6 py-4 text-sm font-inter text-gray-600">{item.golongan_darah}</td>
+                      <td className="px-6 py-4 text-sm font-inter text-gray-600">
+                        <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-50 text-primary border border-red-100">
+                          {item.golongan_darah || '-'}
+                        </span>
+                      </td>
                       <td className="px-6 py-4 text-sm font-inter">
                         {item.no_hp ? (
                           <a
@@ -354,9 +358,9 @@ const Relawan = () => {
                       </td>
                       <td className="px-6 py-4 text-sm font-inter text-gray-600">{item.keterangan || "-"}</td>
                       <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => handleOpenEdit(item)} className="p-2 text-gray-400 hover:text-secondary hover:bg-amber-50 rounded-lg transition-colors border border-transparent hover:border-amber-200"><Edit2 size={16} /></button>
-                          <button onClick={() => handleOpenDelete(item)} className="p-2 text-gray-400 hover:text-primary hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200"><Trash2 size={16} /></button>
+                        <div className="flex items-center justify-end gap-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                          <button onClick={() => handleOpenEdit(item)} className="p-2 text-gray-400 hover:text-secondary hover:bg-amber-50 rounded-lg transition-colors border border-transparent hover:border-amber-200" title="Edit Relawan"><Edit2 size={16} /></button>
+                          <button onClick={() => handleOpenDelete(item)} className="p-2 text-gray-400 hover:text-primary hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200" title="Hapus Relawan"><Trash2 size={16} /></button>
                         </div>
                       </td>
                     </tr>
