@@ -37,8 +37,8 @@ exports.getNewsById = async (req, res) => {
 
 exports.createNews = async (req, res) => {
   try {
-    const { title, category, excerpt, content, status } = req.body;
-    const author = req.user?.name || 'Admin';
+    const { title, category, excerpt, content, status, author: bodyAuthor } = req.body;
+    const author = bodyAuthor?.trim() || req.user?.name || 'Admin';
     let image_url = null;
 
     if (req.file) {
@@ -60,9 +60,14 @@ exports.createNews = async (req, res) => {
 exports.updateNews = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, category, excerpt, content, status } = req.body;
+    const { title, category, excerpt, content, status, author } = req.body;
     let query = 'UPDATE berita SET title = ?, category = ?, excerpt = ?, content = ?, status = ?';
     const params = [title, category, excerpt, content, status];
+
+    if (author !== undefined) {
+      query += ', author = ?';
+      params.push(author);
+    }
 
     if (req.file) {
       // Find old image to delete from storage
