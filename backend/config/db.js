@@ -5,6 +5,11 @@ dotenv.config();
 
 let databaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_DB_URL;
 
+// Fallback to Supabase connection pooler if running on Vercel or cloud and DATABASE_URL is not set in env
+if (!databaseUrl && (process.env.VERCEL || process.env.NODE_ENV === 'production')) {
+  databaseUrl = 'postgresql://postgres.jmkmjmbglnnafclfpbjp:admin%40lisan1234@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres';
+}
+
 // Auto-fix IPv6 direct connection to IPv4 Connection Pooler (prevents getaddrinfo ENOTFOUND)
 if (databaseUrl) {
   // Normalize project ID typo (L vs I)
