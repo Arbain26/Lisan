@@ -13,7 +13,13 @@ import {
   Loader2, 
   AlertTriangle, 
   CheckCircle2, 
-  Bell 
+  Bell,
+  Droplets,
+  Heart,
+  Phone,
+  ArrowRight,
+  Hospital,
+  AlertCircle
 } from "lucide-react";
 
 import { useState, useEffect } from "react";
@@ -35,6 +41,8 @@ const Dashboard = () => {
     relawan: 0,
     pesan: 0,
     proker: 0,
+    urgentBloodRequests: [],
+    urgentBloodCount: 0
   });
   const [loadingStats, setLoadingStats] = useState(true);
   
@@ -77,8 +85,23 @@ const Dashboard = () => {
     { title: "Program Kerja (Proker)", value: loadingStats ? "..." : dashboardStats.proker, icon: CalendarDays, color: "text-rose-500", bg: "bg-rose-500/10", trend: "Live" },
     { title: "Total Program", value: loadingStats ? "..." : dashboardStats.program, icon: CalendarDays, color: "text-emerald-500", bg: "bg-emerald-500/10", trend: "Live" },
     { title: "Foto Galeri", value: loadingStats ? "..." : dashboardStats.galeri, icon: ImageIcon, color: "text-purple-500", bg: "bg-purple-500/10", trend: "Live" },
-    { title: "Total Relawan", value: loadingStats ? "..." : dashboardStats.relawan, icon: Users, color: "text-secondary", bg: "bg-secondary/10", trend: "Live" },
-    { title: "Pesan Masuk", value: loadingStats ? "..." : dashboardStats.pesan, icon: MessageSquare, color: "text-primary", bg: "bg-primary/10", trend: "Live" },
+    { 
+      title: "Total Relawan", 
+      value: loadingStats ? "..." : dashboardStats.relawan, 
+      icon: Users, 
+      color: "text-secondary", 
+      bg: "bg-secondary/10", 
+      trend: "Live" 
+    },
+    { 
+      title: "Pesan Masuk", 
+      value: loadingStats ? "..." : dashboardStats.pesan, 
+      urgentBadge: dashboardStats.urgentBloodCount > 0 ? `${dashboardStats.urgentBloodCount} Butuh Darah` : null,
+      icon: MessageSquare, 
+      color: dashboardStats.urgentBloodCount > 0 ? "text-red-600" : "text-primary", 
+      bg: dashboardStats.urgentBloodCount > 0 ? "bg-red-50" : "bg-primary/10", 
+      trend: dashboardStats.urgentBloodCount > 0 ? "Mendesak" : "Live" 
+    },
   ];
 
   return (
@@ -102,6 +125,102 @@ const Dashboard = () => {
         </div>
       </div>
 
+      {/* Emergency Blood Request Alert Banner - ONLY SHOWN WHEN BLOOD REQUESTS EXIST */}
+      {dashboardStats.urgentBloodCount > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-red-600 via-rose-600 to-red-700 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-red-600/20 border border-red-500 relative overflow-hidden"
+        >
+          {/* Background Ambient Glow */}
+          <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+
+          {/* Banner Header */}
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-white/20">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0 shadow-inner">
+                <Droplets size={26} className="text-white fill-white animate-bounce" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="inline-block px-2.5 py-0.5 rounded-full bg-white text-red-700 font-inter font-bold text-[11px] uppercase tracking-wider shadow-sm">
+                    Mendesak
+                  </span>
+                  <span className="text-xs font-inter text-red-100 font-medium">
+                    Notifikasi Darah LISAN
+                  </span>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-poppins font-bold text-white mt-1">
+                  Ada {dashboardStats.urgentBloodCount} Permohonan Butuh Darah Baru!
+                </h2>
+              </div>
+            </div>
+
+            <Link
+              to="/admin/pesan"
+              className="inline-flex items-center justify-center gap-2 bg-white text-red-700 hover:bg-red-50 px-5 py-2.5 rounded-xl font-inter font-bold text-xs sm:text-sm transition-all shadow-md shrink-0 self-start md:self-auto"
+            >
+              <span>Buka Kotak Masuk</span>
+              <ArrowRight size={16} />
+            </Link>
+          </div>
+
+          {/* List of Urgent Blood Requests */}
+          <div className="relative z-10 mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {dashboardStats.urgentBloodRequests.map((req) => (
+              <div
+                key={req.id}
+                className="bg-white/10 hover:bg-white/15 backdrop-blur-md rounded-2xl p-5 border border-white/20 transition-all flex flex-col justify-between space-y-4"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="px-3 py-1 rounded-xl bg-white text-red-700 font-poppins font-black text-sm shadow-sm">
+                      Golongan {req.bloodType}
+                    </span>
+                    <span className="text-[11px] font-inter text-red-100">
+                      {new Date(req.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+
+                  <div>
+                    <h3 className="font-poppins font-bold text-base text-white">
+                      Pasien: {req.patientName}
+                    </h3>
+                    <p className="font-inter text-xs text-red-100 mt-0.5">
+                      Jumlah: <span className="font-bold text-white">{req.quantity}</span> ({req.reason})
+                    </p>
+                  </div>
+
+                  <div className="text-xs font-inter text-red-100 space-y-1 pt-1 border-t border-white/10">
+                    <p className="flex items-center gap-1.5">
+                      <Hospital size={12} className="shrink-0 text-white" />
+                      <span className="truncate">{req.hospital}</span>
+                    </p>
+                    <p className="flex items-center gap-1.5">
+                      <Phone size={12} className="shrink-0 text-white" />
+                      <span className="truncate">{req.name} ({req.phone})</span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Direct Action Button to WhatsApp */}
+                {req.phone && (
+                  <a
+                    href={`https://wa.me/${req.phone.replace(/[^0-9]/g, '').replace(/^0/, '62')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 w-full py-2 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-inter font-bold text-xs transition-colors shadow-sm"
+                  >
+                    <Phone size={13} />
+                    Hubungi Pemohon via WA
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 sm:gap-6">
         {stats.map((stat, index) => (
@@ -116,10 +235,17 @@ const Dashboard = () => {
               <div className={`p-3 rounded-xl ${stat.bg}`}>
                 <stat.icon className={`w-6 h-6 ${stat.color}`} />
               </div>
-              <span className="flex items-center gap-1 text-xs font-inter font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">
-                {stat.trend}
-                <ArrowUpRight size={12} />
-              </span>
+              {stat.urgentBadge ? (
+                <span className="flex items-center gap-1 text-[11px] font-inter font-bold text-red-700 bg-red-100 px-2 py-0.5 rounded-full border border-red-200 animate-pulse">
+                  <Droplets size={10} className="fill-red-700" />
+                  {stat.urgentBadge}
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 text-xs font-inter font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">
+                  {stat.trend}
+                  <ArrowUpRight size={12} />
+                </span>
+              )}
             </div>
             <h3 className="text-gray-500 font-inter text-xs mb-1">{stat.title}</h3>
             <div className="text-2xl font-poppins font-bold text-gray-900 mt-auto">{stat.value}</div>

@@ -1,20 +1,28 @@
 const mysql = require('mysql2/promise');
-require('dotenv').config();
+const path = require('path');
+const dotenv = require('dotenv');
+
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
+dotenv.config();
 
 async function run() {
-  const connection = await mysql.createConnection({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-  });
-
+  const host = process.env.DB_HOST || 'localhost';
+  const user = process.env.DB_USER || 'root';
+  const password = process.env.DB_PASSWORD || '';
   const dbName = process.env.DB_NAME || 'db_lisan';
 
-  console.log(`Creating database ${dbName} if not exists...`);
-  await connection.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\``);
+  console.log(`Menghubungkan ke MySQL di ${host} (user: ${user})...`);
+  const connection = await mysql.createConnection({
+    host,
+    user,
+    password,
+  });
+
+  console.log(`Membuat database \`${dbName}\` jika belum ada...`);
+  await connection.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
   await connection.query(`USE \`${dbName}\``);
 
-  console.log('Creating users table...');
+  console.log('1. Membuat tabel users...');
   await connection.query(`
     CREATE TABLE IF NOT EXISTS \`users\` (
       \`id\` int(11) NOT NULL AUTO_INCREMENT,
@@ -28,22 +36,7 @@ async function run() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
 
-  console.log('Creating relawan table...');
-  await connection.query(`
-    CREATE TABLE IF NOT EXISTS \`relawan\` (
-      \`id\` int(11) NOT NULL AUTO_INCREMENT,
-      \`nama\` varchar(150) NOT NULL,
-      \`instansi\` varchar(150) NOT NULL,
-      \`daerah\` varchar(100) NOT NULL,
-      \`golongan_darah\` varchar(10) NOT NULL,
-      \`no_hp\` varchar(20) NOT NULL,
-      \`keterangan\` text,
-      \`created_at\` timestamp DEFAULT current_timestamp(),
-      PRIMARY KEY (\`id\`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-  `);
-
-  console.log('Creating hero_slides table...');
+  console.log('2. Membuat tabel hero_slides...');
   await connection.query(`
     CREATE TABLE IF NOT EXISTS \`hero_slides\` (
       \`id\` int(11) NOT NULL AUTO_INCREMENT,
@@ -56,7 +49,7 @@ async function run() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
 
-  console.log('Creating berita table...');
+  console.log('3. Membuat tabel berita...');
   await connection.query(`
     CREATE TABLE IF NOT EXISTS \`berita\` (
       \`id\` int(11) NOT NULL AUTO_INCREMENT,
@@ -72,7 +65,20 @@ async function run() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
 
-  console.log('Creating program table...');
+  console.log('4. Membuat tabel galeri...');
+  await connection.query(`
+    CREATE TABLE IF NOT EXISTS \`galeri\` (
+      \`id\` int(11) NOT NULL AUTO_INCREMENT,
+      \`title\` varchar(255) NOT NULL,
+      \`image_url\` varchar(255) NOT NULL,
+      \`grid_span\` varchar(50) DEFAULT NULL,
+      \`date_taken\` timestamp DEFAULT current_timestamp(),
+      \`created_at\` timestamp DEFAULT current_timestamp(),
+      PRIMARY KEY (\`id\`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  console.log('5. Membuat tabel program...');
   await connection.query(`
     CREATE TABLE IF NOT EXISTS \`program\` (
       \`id\` int(11) NOT NULL AUTO_INCREMENT,
@@ -88,48 +94,7 @@ async function run() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
 
-  console.log('Creating galeri table...');
-  await connection.query(`
-    CREATE TABLE IF NOT EXISTS \`galeri\` (
-      \`id\` int(11) NOT NULL AUTO_INCREMENT,
-      \`title\` varchar(255) NOT NULL,
-      \`image_url\` varchar(255) NOT NULL,
-      \`grid_span\` varchar(50) DEFAULT NULL,
-      \`date_taken\` timestamp DEFAULT current_timestamp(),
-      \`created_at\` timestamp DEFAULT current_timestamp(),
-      PRIMARY KEY (\`id\`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-  `);
-
-  console.log('Creating pesan table...');
-  await connection.query(`
-    CREATE TABLE IF NOT EXISTS \`pesan\` (
-      \`id\` int(11) NOT NULL AUTO_INCREMENT,
-      \`name\` varchar(150) NOT NULL,
-      \`email\` varchar(150) NOT NULL,
-      \`subject\` varchar(255) DEFAULT NULL,
-      \`message\` text NOT NULL,
-      \`is_read\` tinyint(1) DEFAULT 0,
-      \`created_at\` timestamp DEFAULT current_timestamp(),
-      PRIMARY KEY (\`id\`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-  `);
-
-  console.log('Creating donor table...');
-  await connection.query(`
-    CREATE TABLE IF NOT EXISTS \`donor\` (
-      \`id\` int(11) NOT NULL AUTO_INCREMENT,
-      \`name\` varchar(150) NOT NULL,
-      \`blood_type\` varchar(10) NOT NULL,
-      \`phone\` varchar(20) NOT NULL,
-      \`last_donation\` date DEFAULT NULL,
-      \`status\` varchar(50) DEFAULT 'Bisa Donor',
-      \`created_at\` timestamp DEFAULT current_timestamp(),
-      PRIMARY KEY (\`id\`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-  `);
-
-  console.log('Creating departemen table...');
+  console.log('6. Membuat tabel departemen...');
   await connection.query(`
     CREATE TABLE IF NOT EXISTS \`departemen\` (
       \`id\` int(11) NOT NULL AUTO_INCREMENT,
@@ -143,7 +108,7 @@ async function run() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
 
-  console.log('Creating pengurus table...');
+  console.log('7. Membuat tabel pengurus...');
   await connection.query(`
     CREATE TABLE IF NOT EXISTS \`pengurus\` (
       \`id\` int(11) NOT NULL AUTO_INCREMENT,
@@ -152,6 +117,11 @@ async function run() {
       \`departemen_id\` int(11) DEFAULT NULL,
       \`foto_url\` varchar(255) DEFAULT NULL,
       \`urutan\` int(11) DEFAULT 0,
+      \`bio\` text DEFAULT NULL,
+      \`email\` varchar(100) DEFAULT NULL,
+      \`instagram\` varchar(100) DEFAULT NULL,
+      \`linkedin\` varchar(100) DEFAULT NULL,
+      \`kampus\` varchar(150) DEFAULT NULL,
       \`created_at\` timestamp DEFAULT current_timestamp(),
       PRIMARY KEY (\`id\`),
       KEY \`departemen_id\` (\`departemen_id\`),
@@ -159,7 +129,7 @@ async function run() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
 
-  console.log('Creating pengaturan table...');
+  console.log('8. Membuat tabel pengaturan...');
   await connection.query(`
     CREATE TABLE IF NOT EXISTS \`pengaturan\` (
       \`id\` int(11) NOT NULL AUTO_INCREMENT,
@@ -170,12 +140,74 @@ async function run() {
       \`instagram\` varchar(255) DEFAULT NULL,
       \`facebook\` varchar(255) DEFAULT NULL,
       \`youtube\` varchar(255) DEFAULT NULL,
+      \`tentang_organisasi\` text DEFAULT NULL,
+      \`sejarah\` longtext DEFAULT NULL,
+      \`visi\` text DEFAULT NULL,
+      \`misi\` json DEFAULT NULL,
+      \`nilai_organisasi\` json DEFAULT NULL,
+      \`menu_visibility\` json DEFAULT NULL,
       \`created_at\` timestamp DEFAULT current_timestamp(),
       PRIMARY KEY (\`id\`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
 
-  console.log('Creating proker table...');
+  console.log('9. Membuat tabel korwil...');
+  await connection.query(`
+    CREATE TABLE IF NOT EXISTS \`korwil\` (
+      \`id\` int(11) NOT NULL AUTO_INCREMENT,
+      \`name\` varchar(150) NOT NULL,
+      \`kampus\` text NOT NULL,
+      \`anggota\` varchar(100) NOT NULL,
+      \`urutan\` int(11) DEFAULT 0,
+      \`is_active\` tinyint(1) DEFAULT 1,
+      \`created_at\` timestamp DEFAULT current_timestamp(),
+      PRIMARY KEY (\`id\`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  console.log('10. Membuat tabel relawan & donor...');
+  await connection.query(`
+    CREATE TABLE IF NOT EXISTS \`relawan\` (
+      \`id\` int(11) NOT NULL AUTO_INCREMENT,
+      \`nama\` varchar(150) NOT NULL,
+      \`instansi\` varchar(150) NOT NULL,
+      \`daerah\` varchar(100) NOT NULL,
+      \`golongan_darah\` varchar(10) NOT NULL,
+      \`no_hp\` varchar(20) NOT NULL,
+      \`keterangan\` text,
+      \`created_at\` timestamp DEFAULT current_timestamp(),
+      PRIMARY KEY (\`id\`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  await connection.query(`
+    CREATE TABLE IF NOT EXISTS \`donor\` (
+      \`id\` int(11) NOT NULL AUTO_INCREMENT,
+      \`name\` varchar(150) NOT NULL,
+      \`blood_type\` varchar(10) NOT NULL,
+      \`phone\` varchar(20) NOT NULL,
+      \`last_donation\` date DEFAULT NULL,
+      \`status\` varchar(50) DEFAULT 'Bisa Donor',
+      \`created_at\` timestamp DEFAULT current_timestamp(),
+      PRIMARY KEY (\`id\`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  console.log('11. Membuat tabel pesan...');
+  await connection.query(`
+    CREATE TABLE IF NOT EXISTS \`pesan\` (
+      \`id\` int(11) NOT NULL AUTO_INCREMENT,
+      \`name\` varchar(150) NOT NULL,
+      \`email\` varchar(150) NOT NULL,
+      \`subject\` varchar(255) DEFAULT NULL,
+      \`message\` text NOT NULL,
+      \`is_read\` tinyint(1) DEFAULT 0,
+      \`created_at\` timestamp DEFAULT current_timestamp(),
+      PRIMARY KEY (\`id\`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  console.log('13. Membuat tabel proker & matriks...');
   await connection.query(`
     CREATE TABLE IF NOT EXISTS \`proker\` (
       \`id\` int(11) NOT NULL AUTO_INCREMENT,
@@ -194,7 +226,6 @@ async function run() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
 
-  console.log('Creating proker_schedule table...');
   await connection.query(`
     CREATE TABLE IF NOT EXISTS \`proker_schedule\` (
       \`id\` int(11) NOT NULL AUTO_INCREMENT,
@@ -211,7 +242,6 @@ async function run() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
 
-  console.log('Creating proker_notifications table...');
   await connection.query(`
     CREATE TABLE IF NOT EXISTS \`proker_notifications\` (
       \`id\` int(11) NOT NULL AUTO_INCREMENT,
@@ -226,7 +256,6 @@ async function run() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
 
-  console.log('Creating proker_files table...');
   await connection.query(`
     CREATE TABLE IF NOT EXISTS \`proker_files\` (
       \`id\` int(11) NOT NULL AUTO_INCREMENT,
@@ -239,6 +268,7 @@ async function run() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
 
+<<<<<<< HEAD
   console.log('Creating kader table...');
   await connection.query(`
     CREATE TABLE IF NOT EXISTS \`kader\` (
@@ -255,7 +285,6 @@ async function run() {
       UNIQUE KEY \`uq_kader_nama_angkatan\` (\`nama\`, \`angkatan\`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
-
 
   // Insert default kader data (LIS 5 - UNISAN)
   const [kaderRows] = await connection.query('SELECT COUNT(*) as count FROM kader');
@@ -285,20 +314,25 @@ async function run() {
     }
   }
 
-  // Insert default admin
+  // ==============================================================================
+  // SEED DATA
+  // ==============================================================================
+  console.log('Menyiapkan data awal (seeds)...');
+
+  // Admin Default
   const [users] = await connection.query('SELECT COUNT(*) as count FROM users WHERE email = ? OR email = ?', ['admin@lisan.id', 'admin@lisan']);
   if (users[0].count === 0) {
-    console.log('Inserting default admin...');
+    console.log(' - Memasukkan admin default (admin@lisan.id / password: password123)...');
     await connection.query(`
       INSERT INTO users (name, email, password, role) VALUES 
-      ('Admin Utama', 'admin@lisan.id', '$2b$10$Hj5Col471JDvmKenecRdW.WgXChZRoRP9ZvnKZd5aMj638m5GF5C.', 'Admin')
+      ('Admin Utama', 'admin@lisan.id', '$2b$10$y8dboD11ijbI0IEcehbo8OX2NkYgdHqNUmwUCmBSiRZpky.FhROl2', 'Admin')
     `);
   }
 
-  // Insert default hero slides
+  // Hero Slides
   const [slides] = await connection.query('SELECT COUNT(*) as count FROM hero_slides');
   if (slides[0].count === 0) {
-    console.log('Inserting default hero slides...');
+    console.log(' - Memasukkan hero slides default...');
     await connection.query(`
       INSERT INTO hero_slides (image_url, title, highlight, sub) VALUES 
       ('https://images.unsplash.com/photo-1529119368496-2dfda6ec2804?w=1920&q=85', 'Lingkar Mahasiswa Islam', 'untuk Perubahan', 'Membangun generasi intelektual, progresif, dan Islami untuk masa depan Indonesia yang lebih baik.'),
@@ -307,72 +341,144 @@ async function run() {
     `);
   }
 
-  // Insert default departments
+  // 5 Departemen Resmi LISAN
   const [depts] = await connection.query('SELECT COUNT(*) as count FROM departemen');
   if (depts[0].count === 0) {
-    console.log('Inserting default departments...');
-    const defaultDepts = [
+    console.log(' - Memasukkan 5 departemen resmi...');
+    const officialDepts = [
       [
-        'Departemen Kaderisasi',
-        'Users',
-        'bg-emerald-50 text-emerald-600',
-        'Merancang dan melaksanakan alur pembinaan anggota, mulai dari rekrutmen hingga pelatihan kepemimpinan tingkat lanjut. Ujung tombak penjaga kualitas sumber daya manusia LISAN.',
-        JSON.stringify(['Latihan Kepemimpinan Dasar', 'Upgrading Pengurus', 'Mentoring Rutin'])
+        'Keperempuanan',
+        'Award',
+        'bg-rose-50 text-rose-600 border-rose-100',
+        'Wadah pemberdayaan, penguatan kapasitas, advokasi, serta pengembangan potensi kader mahasiswi Islam dalam ranah sosial dan keorganisasian.',
+        JSON.stringify(['Kajian Isu Keperempuanan', 'Sekolah Pemberdayaan Perempuan', 'Bina Karakter Muslimah Tangguh'])
       ],
       [
-        'Departemen Kajian & Keilmuan',
-        'BookOpen',
-        'bg-blue-50 text-blue-600',
-        'Mewadahi diskusi intelektual, literasi, dan riset strategis. Bertanggung jawab memberikan pencerahan akademik dan spiritual bagi seluruh anggota LISAN.',
-        JSON.stringify(['Diskusi Publik', 'Bedah Buku', 'Kajian Keislaman Kontemporer'])
-      ],
-      [
-        'Departemen Sosial Masyarakat',
-        'HeartHandshake',
-        'bg-red-50 text-red-600',
-        'Jembatan penghubung antara LISAN dan masyarakat luas. Mengelola berbagai kegiatan kemanusiaan dan tanggap bencana di wilayah Sidenreng Rappang.',
-        JSON.stringify(['Lingkar Donor Darah', 'Bakti Sosial', 'LISAN Tanggap Bencana'])
-      ],
-      [
-        'Departemen Media & Komunikasi',
+        'Media Informasi dan Komunikasi',
         'Megaphone',
-        'bg-amber-50 text-amber-600',
-        'Mengelola arus informasi, publikasi kegiatan, dan membangun citra positif organisasi melalui berbagai platform media sosial dan website.',
-        JSON.stringify(['Pelatihan Jurnalistik', 'Manajemen Konten Digital', 'Press Release'])
+        'bg-amber-50 text-amber-600 border-amber-100',
+        'Mengelola arus informasi, publikasi kegiatan, produksi konten kreatif, dan membangun citra positif organisasi melalui platform digital dan jejaring komunikasi.',
+        JSON.stringify(['Manajemen Media Digital & Website', 'Pelatihan Jurnalistik & Desain Grafis', 'Produksi Konten Edukasi & Syiar'])
       ],
       [
-        'Departemen Kewirausahaan',
-        'Laptop',
-        'bg-purple-50 text-purple-600',
-        'Membangun kemandirian finansial organisasi sekaligus melatih jiwa wirausaha para anggota melalui berbagai unit usaha kreatif.',
-        JSON.stringify(['LISAN Merchandise', 'Pelatihan Bisnis Digital', 'Bazaar Mahasiswa'])
+        'Lingkar Donor Darah Sidrap',
+        'HeartHandshake',
+        'bg-red-50 text-red-600 border-red-100',
+        'Pusat koordinasi aksi kemanusiaan donor darah, penyediaan basis data pendonor sukarela, serta respons cepat tanggap darurat kebutuhan darah bagi masyarakat Sidenreng Rappang.',
+        JSON.stringify(['Aksi Donor Darah Rutin', 'Layanan Darurat Kebutuhan Darah', 'Perekrutan & Database Relawan Donor'])
+      ],
+      [
+        'Pengkaderan',
+        'Users',
+        'bg-emerald-50 text-emerald-600 border-emerald-100',
+        'Merancang dan mengawal alur pembinaan anggota, mulai dari proses rekrutmen hingga pelatihan kepemimpinan kader sebagai jantung regenerasi organisasi LISAN.',
+        JSON.stringify(['Latihan Kader & Kepemimpinan', 'Upgrading Kapasitas Pengurus', 'Mentoring & Pendampingan Kader Baru'])
+      ],
+      [
+        'Advokasi dan Pengorganisasian Sosial',
+        'Shield',
+        'bg-blue-50 text-blue-600 border-blue-100',
+        'Mewadahi pendampingan aspirasi, pembelaan hak-hak masyarakat, analisis kebijakan publik, serta pengorganisasian gerakan kepedulian sosial kemasyarakatan.',
+        JSON.stringify(['Advokasi Kebijakan Publik & Sosial', 'Kajian Kritis & Riset Kebijakan', 'Pengorganisasian Gerakan Komunitas'])
       ]
     ];
 
-    for (const dept of defaultDepts) {
+    for (const d of officialDepts) {
       await connection.query(
         'INSERT INTO departemen (nama, icon, color_theme, deskripsi, program_unggulan) VALUES (?, ?, ?, ?, ?)',
-        dept
+        d
       );
     }
   }
 
-  // Insert default website settings
-  const [settings] = await connection.query('SELECT COUNT(*) as count FROM pengaturan');
+  // Pengaturan Profil & Website
+  const [settings] = await connection.query('SELECT COUNT(*) as count FROM pengaturan WHERE id = 1');
   if (settings[0].count === 0) {
-    console.log('Inserting default website settings...');
+    console.log(' - Memasukkan pengaturan profil & organisasi...');
+    const defaultMisi = JSON.stringify([
+      "Menyelenggarakan pembinaan karakter Islami yang berkelanjutan bagi mahasiswa.",
+      "Membangun kapasitas kepemimpinan dan manajerial kader melalui pelatihan terstruktur.",
+      "Berperan aktif dalam memberikan solusi terhadap isu-isu sosial kemasyarakatan.",
+      "Memperluas jaringan kerja sama dengan berbagai instansi dan elemen masyarakat.",
+      "Menjadikan organisasi sebagai wadah inovasi dan pengembangan potensi pemuda."
+    ]);
+
+    const defaultNilai = JSON.stringify([
+      { id: 1, title: "Integritas & Moralitas", desc: "Menjunjung tinggi kejujuran, etika, dan nilai-nilai akhlakul karimah dalam setiap tindakan.", icon: "Shield" },
+      { id: 2, title: "Progresif & Intelektual", desc: "Berpikir kritis, haus akan ilmu pengetahuan, dan terus melakukan pembaruan positif.", icon: "Sparkles" },
+      { id: 3, title: "Kepedulian Sosial", desc: "Peka terhadap persoalan masyarakat dan aktif memberikan kontribusi nyata.", icon: "Heart" },
+      { id: 4, title: "Kolaboratif", desc: "Membangun sinergi dan kebersamaan untuk mencapai tujuan bersama yang lebih besar.", icon: "Users" }
+    ]);
+
+    const defaultMenuVisibility = JSON.stringify({
+      beranda: true,
+      profil: true,
+      profil_about: true,
+      profil_sejarah: true,
+      profil_visi_misi: true,
+      profil_nilai: true,
+      organisasi: true,
+      org_structure: true,
+      org_departemen: true,
+      org_korwil: true,
+      program: true,
+      program_kajian: true,
+      program_sosial: true,
+      program_leadership: true,
+      media: true,
+      media_news: true,
+      media_gallery: true,
+      donor: true,
+      contact: true
+    });
+
     await connection.query(`
-      INSERT INTO pengaturan (id, nama_organisasi, email, telepon, alamat, instagram, facebook, youtube) VALUES 
-      (1, 'Lingkar Mahasiswa Islam untuk Perubahan (LISAN)', 'info@lisan.id', '+62 819-3317-2687', 'Jl. Jenderal Sudirman No. 123, Kabupaten Sidenreng Rappang, Sulawesi Selatan', 'https://instagram.com/lisan.id', 'https://facebook.com/lisan.id', 'https://youtube.com/@lisan.id')
-    `);
+      INSERT INTO pengaturan (
+        id, nama_organisasi, email, telepon, alamat, instagram, facebook, youtube,
+        tentang_organisasi, sejarah, visi, misi, nilai_organisasi, menu_visibility
+      ) VALUES (
+        1,
+        'Lingkar Mahasiswa Islam untuk Perubahan (LISAN)',
+        'info@lisan.id',
+        '+62 819-3317-2687',
+        'Jl. Jenderal Sudirman No. 123, Kabupaten Sidenreng Rappang, Sulawesi Selatan',
+        'https://instagram.com/lisan.id',
+        'https://facebook.com/lisan.id',
+        'https://youtube.com/@lisan.id',
+        'Lingkar Mahasiswa Islam untuk Perubahan (LISAN) didirikan sebagai wadah pergerakan dan pemberdayaan mahasiswa berbasis nilai-nilai keislaman, keilmuan, dan kepedulian sosial.',
+        'LISAN berawal dari semangat kebersamaan mahasiswa lintas kampus di Sidenreng Rappang yang melihat perlunya wadah kolaboratif pembinaan intelektual dan pengabdian masyarakat nyata.',
+        'Terwujudnya generasi mahasiswa Islam yang berakhlak mulia, unggul secara intelektual, dan berkontribusi nyata bagi kemajuan umat dan bangsa.',
+        ?,
+        ?,
+        ?
+      )
+    `, [defaultMisi, defaultNilai, defaultMenuVisibility]);
   }
 
-  console.log('Database and all tables setup completed successfully!');
+  // Koordinator Wilayah (Korwil)
+  const [korwils] = await connection.query('SELECT COUNT(*) as count FROM korwil');
+  if (korwils[0].count === 0) {
+    console.log(' - Memasukkan data awal Korwil...');
+    const defaultKorwils = [
+      ['Koordinator Wilayah Pangkajene', 'Mewadahi mahasiswa dari kampus-kampus di area Pangkajene dan sekitarnya.', '120+ Kader Aktif', 1, 1],
+      ['Koordinator Wilayah Rappang', 'Basis pergerakan utama untuk institusi pendidikan tinggi di wilayah utara Sidrap.', '85+ Kader Aktif', 2, 1],
+      ['Koordinator Wilayah Makassar', 'Wadah silaturahmi dan pembinaan bagi mahasiswa asal Sidrap yang menempuh pendidikan di Kota Makassar.', '200+ Kader Aktif', 3, 1],
+      ['Koordinator Wilayah Parepare', 'Mengoordinasikan kegiatan dan kajian bagi kader LISAN yang tersebar di wilayah Parepare.', '90+ Kader Aktif', 4, 1]
+    ];
+
+    for (const k of defaultKorwils) {
+      await connection.query('INSERT INTO korwil (name, kampus, anggota, urutan, is_active) VALUES (?, ?, ?, ?, ?)', k);
+    }
+  }
+
+  console.log('\n================================================================');
+  console.log('  [BERHASIL] Database db_lisan dan 14 tabel siap digunakan!');
+  console.log('================================================================');
   await connection.end();
   process.exit(0);
 }
 
 run().catch(err => {
-  console.error('Error running DB setup:', err);
+  console.error('\n[GAGAL SETUP]:', err.message);
   process.exit(1);
 });

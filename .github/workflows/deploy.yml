@@ -1,0 +1,56 @@
+name: Auto Deploy LISAN ke VPS Sumopod
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: 🚀 Deploy ke VPS Sumopod
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Eksekusi Remote Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            # 1. Load NVM agar npm, node, dan pm2 dapat dieksekusi di sesi SSH non-interaktif
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+            # 2. Direktori proyek LISAN di VPS (Sesuaikan path jika berbeda, default: /var/www/lisan)
+            PROJECT_PATH="/var/www/lisan"
+
+            if [ ! -d "$PROJECT_PATH" ]; then
+              echo "❌ Error: Direktori $PROJECT_PATH tidak ditemukan di VPS."
+              echo "Silakan lakukan 'git clone' repository terlebih dahulu ke folder tersebut."
+              exit 1
+            fi
+
+            cd "$PROJECT_PATH"
+
+            # 3. Tarik pembaruan kode terbaru dari branch main (Clean pull)
+            echo "⬇️ Menarik kode terbaru dari GitHub..."
+            git fetch --all
+            git reset --hard origin/main
+
+            # 4. Instal dependensi & build Frontend React (Vite)
+            echo "📦 Build Frontend Vite..."
+            npm install
+            npm run build
+
+            # 5. Instal dependensi Backend & Restart Process PM2
+            echo "⚙️ Memperbarui Backend Express & me-restart PM2..."
+            cd backend
+            npm install
+            pm2 restart lisan-backend || pm2 start server.js --name lisan-backend
+
+            echo "=========================================================="
+            echo "🎉 Auto-deploy LISAN ke VPS Sumopod berhasil diselesaikan!"
+            echo "=========================================================="
+

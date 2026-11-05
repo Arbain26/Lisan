@@ -1,5 +1,44 @@
 const pool = require('../../config/db');
 
+// Helper to parse blood request details
+const parseBloodRequest = (msg) => {
+  const lines = (msg.message || '').split('\n');
+  const details = {
+    bloodType: 'O',
+    patientName: '-',
+    quantity: '-',
+    hospital: '-',
+    patientAddress: '-',
+    reason: '-',
+    phone: ''
+  };
+  
+  lines.forEach(line => {
+    const parts = line.split(':');
+    if (parts.length >= 2) {
+      const key = parts[0].trim();
+      const val = parts.slice(1).join(':').trim();
+      if (key === 'Golongan Darah') details.bloodType = val;
+      else if (key === 'Nama Pasien') details.patientName = val;
+      else if (key === 'Jumlah yang Dibutuhkan') details.quantity = val;
+      else if (key === 'Tempat Perawatan') details.hospital = val;
+      else if (key === 'Alamat Pasien') details.patientAddress = val;
+      else if (key === 'Keperluan') details.reason = val;
+      else if (key === 'Kontak Pemohon') details.phone = val;
+    }
+  });
+
+  return {
+    id: msg.id,
+    name: msg.name,
+    email: msg.email,
+    subject: msg.subject,
+    message: msg.message,
+    createdAt: msg.created_at,
+    ...details
+  };
+};
+
 exports.getAllMessages = async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM pesan ORDER BY created_at DESC');
@@ -27,6 +66,25 @@ exports.getAllMessages = async (req, res) => {
     res.json(formattedRows);
   } catch (error) {
     console.error('Error fetching messages:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+exports.getBloodNotifications = async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT * FROM pesan 
+       WHERE is_read = 0 
+       AND (LOWER(subject) LIKE '%butuh darah%' OR message LIKE '%--- PERMOHONAN BUTUH DARAH ---%') 
+       ORDER BY created_at DESC`
+    );
+
+    res.json({
+      count: rows.length,
+      requests: rows.map(parseBloodRequest)
+    });
+  } catch (error) {
+    console.error('Error fetching blood notifications:', error);
     res.status(500).json({ message: 'Server Error' });
   }
 };
