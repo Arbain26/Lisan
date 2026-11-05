@@ -268,7 +268,6 @@ async function run() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
 
-<<<<<<< HEAD
   console.log('Creating kader table...');
   await connection.query(`
     CREATE TABLE IF NOT EXISTS \`kader\` (
