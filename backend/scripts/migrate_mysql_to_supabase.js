@@ -31,18 +31,8 @@ async function migrate() {
 
   // 2. Connect to Supabase
   console.log('\n[2/3] Menghubungkan ke Supabase...');
-  let cleanUrl = supabaseUrl;
-  cleanUrl = cleanUrl.replace('jmkmjmbginnafclfpbjp', 'jmkmjmbglnnafclfpbjp');
-  if (cleanUrl.includes('db.jmkmjmbglnnafclfpbjp.supabase.co')) {
-    cleanUrl = cleanUrl.replace('db.jmkmjmbglnnafclfpbjp.supabase.co', 'aws-0-ap-northeast-1.pooler.supabase.com');
-    cleanUrl = cleanUrl.replace(':5432', ':6543');
-  }
-  if (cleanUrl.includes('aws-0-ap-northeast-1.pooler.supabase.com')) {
-    if (cleanUrl.includes('://admin@lisan.id:') || cleanUrl.includes('://postgres:')) {
-      cleanUrl = cleanUrl.replace(/:\/\/[^:]+:/, '://postgres.jmkmjmbglnnafclfpbjp:');
-    }
-    cleanUrl = cleanUrl.replace(/:\/\/([^:]+):\[([^\]]+)\]@/, '://$1:$2@');
-  }
+  let cleanUrl = supabaseUrl.trim();
+  cleanUrl = cleanUrl.replace(/:\/\/([^:]+):\[([^\]]+)\]@/, '://$1:$2@');
 
   const pgPool = new Pool({
     connectionString: cleanUrl,
@@ -169,9 +159,10 @@ async function migrate() {
   } catch (err) {
     console.error('  ✗ Gagal menyalin tabel pesan:', err.message);
   }
+  await copyTable('korwil', ['id', 'name', 'kampus', 'anggota', 'urutan', 'is_active', 'created_at']);
   await copyTable('berita', ['id', 'title', 'category', 'excerpt', 'content', 'image_url', 'status', 'author', 'created_at']);
   await copyTable('galeri', ['id', 'title', 'image_url', 'grid_span', 'date_taken', 'created_at']);
-  await copyTable('donor', ['id', 'nama', 'nominal', 'pesan', 'metode', 'status', 'bukti_transfer', 'created_at']);
+  await copyTable('donor', ['id', 'name', 'blood_type', 'phone', 'last_donation', 'status', 'created_at']);
 
   console.log('\n================================================================');
   console.log(' SELURUH DATA BERHASIL DIMIGRASIKAN KE SUPABASE DENGAN LENGKAP! ');
